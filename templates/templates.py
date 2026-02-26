@@ -214,7 +214,6 @@ SOURCES_LIST_TEMPLATE = """
 
             <a href="/source/{{ source.id }}">
               <div class="source-title">
-                 {{ source.title or "Untitled source" }}
                  {{ source.url }}
               </div>
             </a>
@@ -317,9 +316,9 @@ LOGS_TEMPLATE = """
              [{{log.date}}]
              Level:{{log.level}}: {{log.info_text}},
         </div>
-        <div>
+        <pre>
              {{log.detail_text}}
-        </div>
+        </pre>
     {% endfor %}
 </div>
 

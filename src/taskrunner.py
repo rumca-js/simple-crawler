@@ -58,8 +58,11 @@ class TaskRunner(object):
 
                 links = self.get_links(url)
                 print(f"Found links {links}")
+                entries = Entries(self.connection)
+
                 for link in links:
-                    if UrlLocation(link).is_webpage_link():
+                    exists = self.connection.entries_table.exists(link=link)
+                    if not exists and UrlLocation(link).is_webpage_link():
                         self.process_link(link, source)
             else:
                 AppLogging(self.connection).error(f"URL:{source.url} Response is invalid")
@@ -103,6 +106,7 @@ class TaskRunner(object):
         entry["title"] = url.get_title()
         entry["description"] = url.get_description()
         entry["status_code"] = url.get_status_code()
+        entry["thumbnail"] = url.get_thumbnail()
         if source:
             entry["source_id"] = source.id
 

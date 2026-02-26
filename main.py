@@ -402,6 +402,7 @@ def stats():
     entry_rules_len = connection.entry_rules.count()
     sources_operational_len = connection.sourceoperationaleata.count()
     applogging_len = connection.applogging.count()
+    social_len = connection.socialdata.count()
 
     system = System.get_object()
 
@@ -411,6 +412,7 @@ def stats():
     stats_map["Sources"] = sources_len
     stats_map["Sources Operational Data"] = sources_operational_len
     stats_map["Entry rules"] = entry_rules_len
+    stats_map["Social data"] = social_len
     stats_map["AppLogging"] = applogging_len
 
     stats_map["System state"] = system.is_system_ok()
