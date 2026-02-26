@@ -41,6 +41,8 @@ class Entries(object):
         return self.connection.entries_table.get(id=id)
 
     def cleanup(self):
+        # TODO remove social data
+
         ids_to_remove = set()
         for entry in self.connection.entries_table.get_where():
             if not self.connection.sources_table.get(id=entry.source_id):

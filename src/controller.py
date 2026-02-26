@@ -22,7 +22,7 @@ class Controller(object):
         self.connection = connection
 
     def read_sources(self):
-        self.connection.source_table.count() == 0:
+        if self.connection.sources_table.count() == 0:
             path = Path("config") / "seed.txt"
             if path.exists():
                 text = path.read_text()

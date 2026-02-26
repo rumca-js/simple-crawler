@@ -1,0 +1,447 @@
+PAGINATION="""
+<div class="pagination">
+    <li class="page-item">
+       <a href="{{ entries_page }}?p={{ prev_page }}" class="btnNavigation page-link">&lt;</a>
+    </li>
+    <li class="page-item">
+       <a href="{{ entries_page }}?p={{ next_page }}" class="btnNavigation page-link">&gt;</a>
+    </li>
+</div>
+"""
+
+def get_view(body, title=""):
+    text = """
+<!doctype html>
+<html>
+<head>
+    <title>{title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link  href="styles/viewerzip.css?i=90" rel="stylesheet" crossorigin="anonymous">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+    </style>
+
+</head>
+<body>
+   {body}
+</body>
+</html>
+"""
+    text = text.replace("{title}", title)
+    return text.replace("{body}", body)
+
+
+INDEX_TEMPLATE = """
+<h1>YAFR - Yet Another Feed Reader v{{version}}</h1>
+<ul>
+  <li><a href="/search">Search</a>
+  <li><a href="/sources">Sources</a>
+  <li><a href="/add-sources">Add sources</a>
+  <li><a href="/remove-all-sources">Remove all sources</a>
+  <li><a href="/remove-all-entries">Remove all entries</a>
+  <li><a href="/entry-rules">Define block rules</a>
+  <li><a href="/logs">Logs</a>
+  <li><a href="/stats">Status</a>
+  <li><a href="/configuration">Configuration</a>
+</ul>
+"""
+
+
+OK_TEMPLATE = """
+<!doctype html>
+<html>
+<head>
+    <title>YouTube Feed Entries</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h2 { margin-top: 30px; }
+        ul { list-style-type: none; padding-left: 0; }
+        li { margin-bottom: 10px; }
+        a { text-decoration: none; color: #1a0dab; }
+    </style>
+</head>
+<body>
+    <div class="nav-buttons">
+        <button class="btn btn-primary" onclick="history.back()">Go back</button>
+        <a class="btn btn-primary" href="/">Home</a>
+    </div>
+    OK
+</body>
+</html>
+"""
+
+
+NOK_TEMPLATE = """
+<!doctype html>
+<html>
+<head>
+    <title>YouTube Feed Entries</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h2 { margin-top: 30px; }
+        ul { list-style-type: none; padding-left: 0; }
+        li { margin-bottom: 10px; }
+        a { text-decoration: none; color: #1a0dab; }
+    </style>
+</head>
+<body>
+    <div class="nav-buttons">
+        <button class="btn btn-primary" onclick="history.back()">Go back</button>
+        <a class="btn btn-primary" href="/">Home</a>
+    </div>
+    NOK
+</body>
+</html>
+"""
+
+STR_TEMPLATE = """
+    <div class="nav-buttons">
+        <button class="btn btn-primary" onclick="history.back()">Go back</button>
+        <a class="btn btn-primary" href="/">Home</a>
+    </div>
+    {template_string}
+"""
+
+
+ENTRIES_LIST_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>YouTube Feed Entries</h1>
+
+<ul>
+{% for entry in entries %}
+    <li class="entry">
+    <img src="{{entry.thumbnail}}"/>
+        <div class="title">
+            {% if entry.link %}
+                <a href="{{ entry.link }}" target="_blank" rel="noopener">
+                    {{ entry.title or "Untitled entry" }}
+                </a>
+            {% else %}
+                {{ entry.title or "Untitled entry" }}
+            {% endif %}
+        </div>
+
+        <div class="meta">
+            {% if entry.author %}By {{ entry.author }}{% endif %}
+            {% if entry.album %} • Album: {{ entry.album }}{% endif %}
+            {% if entry.language %} • Language: {{ entry.language }}{% endif %}
+            {% if entry.status_code %} • HTTP {{ entry.status_code }}{% endif %}
+        </div>
+
+        {% if entry.description %}
+            <div class="description">
+                {{ entry.description }}
+            </div>
+        {% endif %}
+
+        <div class="stats">
+            {% if entry.page_rating is not none %}
+                Rating: {{ entry.page_rating }}
+            {% endif %}
+            {% if entry.page_rating_votes %}
+                • Votes: {{ entry.page_rating_votes }}
+            {% endif %}
+            {% if entry.page_rating_visits %}
+                • Visits: {{ entry.page_rating_visits }}
+            {% endif %}
+            {% if entry.age %}
+                • Age: {{ entry.age }}
+            {% endif %}
+        </div>
+
+        <div class="flags">
+            {% if entry.bookmarked %}
+                <span class="bookmarked">★ Bookmarked</span>
+            {% endif %}
+            {% if entry.permanent %}
+                <span class="permanent">Permanent</span>
+            {% endif %}
+        </div>
+
+        <div class="dates">
+            {% if entry.date_published %}
+                Published: {{ entry.date_published }}
+            {% endif %}
+            {% if entry.date_created %}
+                • Created: {{ entry.date_created }}
+            {% endif %}
+            {% if entry.date_update_last %}
+                • Updated: {{ entry.date_update_last }}
+            {% endif %}
+            {% if entry.date_last_modified %}
+                • Modified: {{ entry.date_last_modified }}
+            {% endif %}
+            {% if entry.date_dead_since %}
+                • Dead since: {{ entry.date_dead_since }}
+            {% endif %}
+        </div>
+    </li>
+{% endfor %}
+</ul>
+"""
+
+
+SOURCES_LIST_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Sources {{sources_length}}</h1>
+
+<form method="GET">
+  <label for="search">Search</label></br>
+  <input type="search" id="search" name="search" value="{{search_value}}"/>
+  <button type="submit">Search</button>
+</form>
+
+<div class="display-grid">
+    {% for source in sources %}
+        <div class="display-card">
+            <a href="/source/{{ source.id }}">
+                <img
+                    src="{{ source.favicon }}"
+                    alt="Source thumbnail"
+                    class="display-thumb"
+                    onerror="this.style.display='none'"
+                />
+            </a>
+
+            <a href="/source/{{ source.id }}">
+              <div class="source-title">
+                 {{ source.title or "Untitled source" }}
+              </div>
+            </a>
+            <div class="source-title">
+               <a href="/rss/{{source.id}}">RSS</a>
+            </div>
+
+        </div>
+    {% endfor %}
+</div>
+
+{{pagination_text}}
+"""
+
+
+SOURCE_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Source {{source_item.title}}</h1>
+
+<div>ID:{{source_item.id}}</div>
+<div>Search:<a href="/search?search=source_id={{source_item.id}}">Search</a></div>
+<div>Url:<a href="{{source_item.url}}">{{source_item.url}}</a></div>
+<div>Thumbnail:<a href="{{source_item.thumbnail}}">{{source_item.thumbnail}}</a></div>
+
+<div>Date fetched:{{source_op_data.date_fetched}}</div>
+
+<form method="POST">
+    <div><label for="fetch_period">Fetch period</label></div>
+    <div><input type="search" id="fetch_period" name="fetch_period" value="{{source_item.fetch_period}}"/></div>
+    <div><label for="xpath">Link acceptance 're' expression</label></div>
+    <div><input type="search" id="xpath" name="xpath" value="{{source_item.xpath}}"/></div>
+    <button type="submit">Save</button>
+</form>
+"""
+
+ADD_SOURCES_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Add Sources</h1>
+
+<form method="POST">
+    <p>One source URL per line:</p>
+    <textarea name="sources">
+{{raw_data}}
+    </textarea>
+    <br>
+    <button type="submit">Add</button>
+</form>
+
+<p>
+You can find RSS sources at:
+  <ul>
+   <li><a href="https://rumca-js.github.io/feeds">Rumca-js feeds</a></li>
+   <li><a href="https://github.com/plenaryapp/awesome-rss-feeds">Awesome RSS feeds</a></li>
+  </ul>
+</p>
+"""
+
+
+DEFINE_ENTRY_RULES_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Define block URLs</h1>
+Will block sources, and entries.
+
+<form method="POST">
+    <p>The URLs/feeds below will be blocked. One source URL per line:</p>
+    <textarea name="sources">
+{{raw_data}}
+    </textarea>
+    <br>
+    <button type="submit">Save</button>
+</form>
+"""
+
+
+LOGS_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+    <a class="btn btn-primary" href="/remove-all-logs">Clear</a>
+</div>
+
+<h1>Logs {{sources_length}}</h1>
+
+<div>
+    {% for log in logs %}
+        <div>
+             ID:{{log.id}}, 
+             [{{log.date}}]
+             Level:{{log.level}}: {{log.info_text}},
+        </div>
+        <div>
+             {{log.detail_text}}
+        </div>
+    {% endfor %}
+</div>
+
+{{pagination_text}}
+"""
+
+
+STATS_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+{% for stat_name, stat_counter in stats.items() %}
+    <div>{{stat_name}} {{stat_counter}}</div>
+{% endfor %}
+"""
+
+
+CONFIGURATION_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<form method="POST">
+{% for config_setting, config_value in configuration.items() %}
+    <div><label for="{{config_setting}}">{{config_setting}}</label></div>
+    <div><input type="search" id="{{config_setting}}" name="{{config_setting}}" value="{{config_value}}"/></div>
+{% endfor %}
+   <button type="submit">Search</button>
+</form>
+"""
+
+
+PROJECT_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{title}}</title>
+      
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+        <script src="https://unpkg.com/sql.js@1.6.0/dist/sql-wasm.js"></script>
+
+        <link  href="styles/viewerzip.css?i=90" rel="stylesheet" crossorigin="anonymous">
+        <script  src="scripts/config_python.js?i=86"></script>
+        <script  src="scripts/library.js?i=86"></script>
+        <script  src="scripts/webtoolkit.js?i=86"></script>
+        <script  src="scripts/entries_library.js?i=86"></script>
+        <script src="scripts/events.js?i=86"></script>
+        <script src="scripts/ui.js?i=86"></script>
+        <script src="scripts/project.js?i=86"></script>
+        <script src="scripts/search.js?i=86"></script>
+        <script>
+         function reset() {
+           {% for setting_key, setting_value in default_values.items() %}
+             {{setting_key}} = "{{setting_value}}";
+           {% endfor %}
+         }
+         reset();
+        </script>
+    </head>
+<body style="padding-bottom: 6em;">
+
+<div id="projectNavbar">
+</div>
+
+<div class="container">
+
+  <div id="statusLine">
+  </div>
+
+  <div id="helpPlace" style="display: none;">
+      <p>
+      This is offline search. It might sound unbelievable, even absurd, but it is true. This search, once initialized from JSON data, is totally offline.
+      </p>
+      <p>
+      I always liked "awesome lists", or reddit megathreads. These are community-driven collections of resources—programs, tools, or knowledge—compiled manually or semi-automatically.
+      </p>
+      <p>
+      The idea behind the Offline Search Initiative is to create similar curated lists, but tailored for domains and channels. This approach could simplify access to focused content without relying on intensive, online search infrastructure. It does, surely has it's downsides.
+      </p>
+      <p>
+      Input supports any words, so you can enter "Google", or "Bing". If "LIKE" is part of the input, then it will be treated as a part of WHERE SQL clause.
+      </p>
+      <div id="version">
+      </div>
+  </div>
+
+  <span id="progressBarElement">
+  </span>
+  
+  <span id="listData">
+  </span>
+
+  <div id="pagination">
+  </div>
+</div>
+
+
+<!--
+Unfortunately, no one can be told what the Matrix is. You have to see it for yourself.
+-->
+
+
+<footer id="footer" class="text-center text-lg-start bg-body-tertiary text-muted fixed-bottom">
+  <div id="footerLine" class="text-center p-1" style="background-color: rgba(0, 0, 0, 0);">
+  </div>
+
+  <div class="text-center p-1" style="background-color: rgba(0, 0, 0, 0);">
+      <span style="white-space: nowrap;">
+      <a href="https://github.com/rumca-js/yafr/issues">Yafr server</a>.
+      </span>
+  </div>
+</footer>
+
+    </body>
+</html>
+"""
+

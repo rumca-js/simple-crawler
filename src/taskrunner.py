@@ -1,8 +1,8 @@
 import re
 import time
+import traceback
 from datetime import datetime, timedelta
 from webtoolkit import BaseUrl, RemoteUrl, PageRequestObject, ContentLinkParser
-import traceback
 
 from .dbconnection import DbConnection
 from .controller import Controller
@@ -11,7 +11,6 @@ from .sourcedata import SourceData
 from .socialdata import SocialData
 from .sources import Sources
 from .entries import Entries
-from .sourcewriter import SourceWriter
 from .applogging import AppLogging
 
 
@@ -28,16 +27,20 @@ class TaskRunner(object):
         self.start_reading = True
 
     def check_source(self, source):
+        print("Check source")
         sourcedata = SourceData(self.connection)
         sourcedata.mark_read(source)
 
         url = self.get_source_url(source)
         if not url:
+            print("No source url")
             return
 
         response = url.get_response()
         if response:
+            print("Check source - reponse")
             if response.is_valid():
+                print("Check source - reponse valid")
                 source_properties = url.get_properties()
 
                 sources = Sources(self.connection)
@@ -45,11 +48,13 @@ class TaskRunner(object):
                 sources.delete_entries(source)
 
                 # add entry for source
-                self.process_link(source.url, source)
+                # self.process_link(source.url, source)
 
                 links = self.get_links(url)
+                print(f"Found links {links}")
                 for link in links:
-                    self.process_link(link, source)
+                    if UrlLocation(link).is_webpage_link():
+                        self.process_link(link, source)
             else:
                 AppLogging(self.connection).error(f"URL:{source.url} Response is invalid")
                 time.sleep(5)
@@ -58,6 +63,7 @@ class TaskRunner(object):
             time.sleep(5)
 
     def process_link(self, link, source):
+        print("process_link")
         entry = self.link_to_entry(link, source)
         if self.is_entry_ok(entry, source):
             entries = Entries(self.connection)
@@ -70,7 +76,7 @@ class TaskRunner(object):
 
     def link_to_social_data(self, link):
         url = self.get_link_url(link)
-        social_data_info = url.get_social_data()
+        social_data_info = url.get_social_properties()
         return social_data_info
 
     def get_links(self, url):
@@ -117,6 +123,7 @@ class TaskRunner(object):
             AppLogging(self.connection).notify(f"Removing invalid source:{source.url}")
             sources = Sources(self.connection)
             sources.delete(id=source.id)
+        return url
 
     def get_link_url(self, link):
         request = PageRequestObject(link)
@@ -165,8 +172,11 @@ class TaskRunner(object):
 
             self.setup_start()
 
-            if init_sources:
-                self.init_sources(init_sources)
+            sources = Sources(self.connection)
+            sources_len = sources.count()
+
+            if sources_len == 0:
+                self.init_sources()
 
             self.controller.close()
             self.connection.close()
@@ -175,10 +185,8 @@ class TaskRunner(object):
         except Exception as e:
             traceback.print_exc()
 
-    def init_sources(self, init_sources):
-        for source_url in init_sources:
-            sources = Sources(self.connection)
-            sources.set(source_url)
+    def init_sources(self):
+        self.controller.read_sources()
 
     def setup_start(self):
         entries = Entries(self.connection)
@@ -190,12 +198,6 @@ class TaskRunner(object):
         print(f"Sources: {sources_len}")
 
     def process_sources(self):
-        self.connection = DbConnection(self.table_name)
-        self.controller = Controller(connection=self.connection)
-        self.add_due_sources()
-        self.controller.close()
-        self.connection.close()
-
         print("Starting reading")
         while True:
             try:
@@ -212,8 +214,6 @@ class TaskRunner(object):
 
                     if self.process_source(index, source_id, len(source_ids)):
                         no_source_read = False
-
-                    self.add_due_sources()
 
                     self.controller.close()
                     self.connection.close()
@@ -236,7 +236,7 @@ class TaskRunner(object):
                 self.controller.close()
                 self.connection.close()
             except Exception as E:
-                AppLogging(self.connection).error("Exception {}".format(str(E)))
+                AppLogging(self.connection).exc(E, "Error during processing of source")
                 time.sleep(1)
 
     def get_due_time(self):
@@ -302,21 +302,7 @@ class TaskRunner(object):
         AppLogging(self.connection).debug(f"{index}/{source_count} {source.url} {source.title}: Reading")
         self.check_source(source)
 
-        #writer = SourceWriter(connection=self.connection, source=source)
-        #writer.write()
-
         AppLogging(self.connection).debug(f"{index}/{source_count} {source.url} {source.title}: Reading DONE")
         time.sleep(1)
 
         return True
-
-    def add_due_sources(self):
-        status = False
-
-        sources = self.controller.get_sources_to_add()
-        if sources:
-            self.start_reading = True
-            self.controller.add_sources(sources)
-            status = True
-
-        return status

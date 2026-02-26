@@ -8,7 +8,7 @@ class SocialData(object):
         self.connection = connection
 
     def get(self, entry_id):
-        social_datas = self.connection.socialdata.get_where({"entry_id" : source.id})
+        social_datas = self.connection.socialdata.get_where({"entry_id" : entry_id})
         for social_data in social_datas:
             return social_data
 
@@ -22,7 +22,8 @@ class SocialData(object):
         if existing_social_data:
             self.connection.sourceoperationaleata.update_json_data(id=existing_social_data.id, json_data=social_data)
         else:
-            self.connection.sourceoperationaleata.insert_json_data(json_data=social_data)
+            #self.connection.sourceoperationaleata.insert_json_data(json_data=social_data)
+            pass
 
     def remove(self, entry_id):
         self.connection.social_data.delete_where({"entry_id" : entry_id})

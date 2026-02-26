@@ -319,6 +319,7 @@ def remove_all_entries():
     connection = DbConnection(table_name)
 
     connection.entries_table.truncate()
+    connection.socialdata.truncate()
 
     html_text = get_view(OK_TEMPLATE, title="Remove all entries")
     return render_template_string(html_text)
@@ -540,7 +541,7 @@ def parse_args():
     parser.add_argument(
         "--port",
         type=int,
-        default=5000,
+        default=4000,
         help="Port to bind the server (default: 5000)"
     )
     parser.add_argument(
