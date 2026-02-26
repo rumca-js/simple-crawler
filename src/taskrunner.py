@@ -51,7 +51,7 @@ class TaskRunner(object):
 
                 sources = Sources(self.connection)
                 sources.set(source.url, source_properties)
-                sources.delete_entries(source)
+                #sources.delete_entries(source)
 
                 # add entry for source
                 # self.process_link(source.url, source)
