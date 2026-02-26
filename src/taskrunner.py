@@ -2,7 +2,13 @@ import re
 import time
 import traceback
 from datetime import datetime, timedelta
-from webtoolkit import BaseUrl, RemoteUrl, PageRequestObject, ContentLinkParser
+from webtoolkit import (
+   BaseUrl,
+   RemoteUrl,
+   PageRequestObject,
+   ContentLinkParser,
+   UrlLocation,
+)
 
 from .dbconnection import DbConnection
 from .controller import Controller

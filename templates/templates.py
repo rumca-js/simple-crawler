@@ -215,6 +215,7 @@ SOURCES_LIST_TEMPLATE = """
             <a href="/source/{{ source.id }}">
               <div class="source-title">
                  {{ source.title or "Untitled source" }}
+                 {{ source.url }}
               </div>
             </a>
             <div class="source-title">
