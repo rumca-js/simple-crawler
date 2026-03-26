@@ -1,4 +1,5 @@
 """
+Simple crawler
 """
 import os
 import sys
@@ -24,6 +25,7 @@ from src.dbconnection import DbConnection
 from src.serializers import entry_to_json, source_to_json, source_and_entries_to_rss
 from src.controller import Controller
 from src.system import System
+from src.sources import Sources
 from src.applogging import AppLogging
 
 
@@ -86,7 +88,16 @@ def parse_search(search, table):
         "source_id": table.c.source_id,
     }
 
-    if "=" in search:
+    if "==" in search:
+        field, value = search.split("==", 1)
+        field = field.strip()
+        value = value.strip()
+
+        column = searchable_fields.get(field)
+        if column is not None and value:
+            return [column == value]
+
+    elif "=" in search:
         field, value = search.split("=", 1)
         field = field.strip()
         value = value.strip()

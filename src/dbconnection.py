@@ -34,6 +34,7 @@ class DbConnection(object):
         self.sourceoperationaleata = ReflectedSourceOperationalData(engine=self.engine, connection=self.connection)
         self.applogging = ReflectedGenericTable(engine=self.engine, connection=self.connection, table_name="applogging")
         self.socialdata = ReflectedSocialData(engine=self.engine, connection=self.connection)
+        self.backgroundjob = ReflectedGenericTable(engine=self.engine, connection=self.connection, table_name="backgroundjob")
 
     def create_engine(db_file):
         engine = create_engine(f"sqlite:///{db_file}", connect_args={"check_same_thread": False})

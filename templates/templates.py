@@ -42,6 +42,7 @@ INDEX_TEMPLATE = """
   <li><a href="/remove-all-entries">Remove all entries</a>
   <li><a href="/entry-rules">Define block rules</a>
   <li><a href="/logs">Logs</a>
+  <li><a href="/jobs">Jobs</a>
   <li><a href="/stats">Status</a>
   <li><a href="/configuration">Configuration</a>
 </ul>
@@ -233,12 +234,13 @@ SOURCE_TEMPLATE = """
 <div class="nav-buttons">
     <button class="btn btn-primary" onclick="history.back()">Go back</button>
     <a class="btn btn-primary" href="/">Home</a>
+    <a class="btn btn-primary" href="/remove-source?id={{source_item.id}}">Remove</a>
 </div>
 
 <h1>Source {{source_item.title}}</h1>
 
 <div>ID:{{source_item.id}}</div>
-<div>Search:<a href="/search?search=source_id={{source_item.id}}">Search</a></div>
+<div>Search:<a href="/search?search=source_id=={{source_item.id}}">Search</a></div>
 <div>Url:<a href="{{source_item.url}}">{{source_item.url}}</a></div>
 <div>Thumbnail:<a href="{{source_item.thumbnail}}">{{source_item.thumbnail}}</a></div>
 
@@ -316,9 +318,32 @@ LOGS_TEMPLATE = """
              [{{log.date}}]
              Level:{{log.level}}: {{log.info_text}},
         </div>
-        <pre>
+        <div>
              {{log.detail_text}}
-        </pre>
+        </div>
+    {% endfor %}
+</div>
+
+{{pagination_text}}
+"""
+
+
+JOBS_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+    <a class="btn btn-primary" href="/remove-all-jobs">Clear</a>
+</div>
+
+<h1>Jobs {{len_jobs}}</h1>
+
+<div>
+    {% for job in jobs %}
+        <div>
+             ID:{{job.id}}, 
+             [{{job.date_created}}]
+             {{job.job}}: {{job.subject}},
+        </div>
     {% endfor %}
 </div>
 

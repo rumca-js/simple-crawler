@@ -53,12 +53,14 @@ class AppLogging(object):
         self.create_entry(info_text, detail_text=detail_text, level=AppLogging.WARNING, stack=stack)
 
     def error(self, info_text, detail_text="", stack=False):
+        print("Error: " + info_text)
         self.create_entry(info_text, detail_text=detail_text, level=AppLogging.ERROR, stack=stack)
 
     def notify(self, info_text, detail_text="", stack=False):
         self.create_entry(info_text, detail_text=detail_text, level=AppLogging.NOTIFICATION, stack=stack)
 
-    def exc(self, exception_object, info_text, detail_text="", stack=False):
+    def exc(self, exception_object, info_text="", detail_text="", stack=False):
+
         error_text = traceback.format_exc()
         print("Exception format")
         print(error_text)
@@ -66,18 +68,12 @@ class AppLogging(object):
         stack_lines = traceback.format_stack()
         stack_string = "".join(stack_lines)
         print("Stack:")
-        print("".join(stack_lines))
+        print(stack_string)
 
-        # only 5 lines!
-        # stack_lines = stack_lines[-5:]
-        # stack_string = "".join(stack_lines)
+        if not info_text:
+            info_text = ""
 
-        if info_text:
-            info_text += ". Exception:{}".format(str(exception_object))
-            detail_text = "Data:\n{}\nStack:\n{}".format(error_text, stack_string)
-        else:
-            info_text = "{}".format(str(exception_object))
-            detail_text = "Data:\n{}Stack:\n{}".format(error_text, stack_string)
-        # info_text += str(exception)
+        info_text = info_text + "\n" + str(exception_object)
+        detail_text = error_text + "\n" + stack_string
 
         self.create_entry(info_text, detail_text=detail_text, level=AppLogging.ERROR, stack=stack)

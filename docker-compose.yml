@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  yafr:
+    image: rozbujnik/yafr
+    container_name: yafr
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    environment:
+      ALLOWED_IP: "192.168.0.1"
+      YAFR_HOST: "0.0.0.0"
+      YAFR_PORT: 5000
