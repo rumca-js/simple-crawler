@@ -218,9 +218,6 @@ SOURCES_LIST_TEMPLATE = """
                  {{ source.url }}
               </div>
             </a>
-            <div class="source-title">
-               <a href="/rss/{{source.id}}">RSS</a>
-            </div>
 
         </div>
     {% endfor %}

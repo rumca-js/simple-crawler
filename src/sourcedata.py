@@ -29,9 +29,12 @@ class SourceData(object):
         if this_source_data:
             date_fetched = this_source_data.date_fetched
 
-            fetch_period_s = 3600 # 1 hour
-            if source.fetch_period > 0:
-                fetch_period_s = source.fetch_period
+            # TODO
+            #fetch_period_s = 3600 # 1 hour
+            #if source.fetch_period > 0:
+            #    fetch_period_s = source.fetch_period
+
+            fetch_period_s = 3600 * 24 # once a day
 
             if datetime.now() - date_fetched < timedelta(seconds=fetch_period_s):
                 return False
