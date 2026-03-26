@@ -346,6 +346,16 @@ def remove_all_logs():
     return render_template_string(html_text)
 
 
+@app.route("/remove-all-jobs")
+def remove_all_jobs():
+    connection = DbConnection(table_name)
+
+    connection.backgroundjob.truncate()
+
+    html_text = get_view(OK_TEMPLATE, title="Remove all jobs")
+    return render_template_string(html_text)
+
+
 @app.route("/remove-all-sources")
 def remove_all_sources():
     connection = DbConnection(table_name)
@@ -365,8 +375,8 @@ def remove_source():
 
     source = connection.sources_table.get(id=source_id)
     if source:
-        controller = Controller(connection)
-        controller.remove_source(source)
+        sources = Sources(connection)
+        sources.delete(id=source.id)
 
         html_text = get_view(OK_TEMPLATE, title="Remove source")
         return render_template_string(html_text)
@@ -400,8 +410,25 @@ def logs():
             ]
 
     logs = list(connection.applogging.get_where(order_by=order_by))
+    len_logs = len(logs)
 
-    return render_template_string(html_text, logs=logs)
+    return render_template_string(html_text, logs=logs, len_logs=len_logs)
+
+
+@app.route("/jobs", methods=["GET", "POST"])
+def jobs():
+    connection = DbConnection(table_name)
+
+    html_text = get_view(JOBS_TEMPLATE, title="Jobs")
+
+    order_by = [
+            connection.backgroundjob.get_table().c.date_created.desc()
+            ]
+
+    jobs = list(connection.backgroundjob.get_where(order_by=order_by))
+    len_jobs = len(jobs)
+
+    return render_template_string(html_text, jobs=jobs, len_jobs=len_jobs)
 
 
 @app.route("/stats")
