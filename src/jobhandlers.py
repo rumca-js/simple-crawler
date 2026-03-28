@@ -141,6 +141,12 @@ class ProcessSourceJobHandler(GenericJobHandler):
             sources = Sources(self.connection)
             sources.delete(id=source.id)
 
+    def is_remote_server(self):
+        return RemoteUrl.get_remote_server_location()
+    
+    def on_done(self, response):
+        pass
+
     def process_source(self, index, source_id, source_count):
         sources = Sources(self.connection)
         source = sources.get(id=source_id)
@@ -243,9 +249,6 @@ class ProcessSourceJobHandler(GenericJobHandler):
             return url
         except:
             AppLogging(self.connection).notify(f"Cannot obtain data for:{link}")
-    
-    def is_remote_server(self):
-        return RemoteUrl.get_remote_server_location()
 
     def is_config_remote_server(self):
         config = self.connection.configurationentry.get()
@@ -257,15 +260,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
             return False
         return True
 
-    def on_done(self, response):
-        pass
-
 
 class CleanupJobHandler(GenericJobHandler):
     def run(self):
-        self.connection = DbConnection(self.table_name)
-        self.controller = Controller(connection=self.connection)
-
         self.add_due_sources()
 
         entries = Entries(self.connection)
@@ -273,11 +270,10 @@ class CleanupJobHandler(GenericJobHandler):
         sources_data = SourceData(self.connection)
         sources_data.cleanup()
 
-        self.controller.close()
-        self.connection.close()
-
     def add_due_sources(self):
         status = False
+
+        self.controller = Controller(connection=self.connection)
 
         sources = self.controller.get_sources_to_add()
         if sources:

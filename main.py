@@ -25,6 +25,7 @@ from src.dbconnection import DbConnection
 from src.serializers import entry_to_json, source_to_json, source_and_entries_to_rss
 from src.controller import Controller
 from src.system import System
+from src.entryrules import EntryRules
 from src.sources import Sources
 from src.applogging import AppLogging
 
@@ -312,16 +313,19 @@ def entry_rules():
     connection = DbConnection(table_name)
     controller = Controller(connection)
 
+    rules = EntryRules(connection = connection)
+
     if request.method == "POST":
         raw_text = request.form.get("sources", "")
-        controller.add_entry_rules(raw_text)
+        rules.add_entry_rules(raw_text)
         return redirect(url_for("index"))
 
     sources = []
     html_text = get_view(DEFINE_ENTRY_RULES_TEMPLATE, title="Set Entry Rules")
 
-    urls = controller.get_rule_urls()
+    urls = rules.get_rule_urls()
     raw_data = "\n".join(urls)
+
     return render_template_string(html_text, raw_data=raw_data)
 
 
@@ -435,23 +439,18 @@ def jobs():
 def stats():
     connection = DbConnection(table_name)
 
-    entries_len = connection.entries_table.count()
-    sources_len = connection.sources_table.count()
-    entry_rules_len = connection.entry_rules.count()
-    sources_operational_len = connection.sourceoperationaleata.count()
-    applogging_len = connection.applogging.count()
-    social_len = connection.socialdata.count()
-
     system = System.get_object()
 
     stats_map = {}
 
-    stats_map["Entries"] = entries_len
-    stats_map["Sources"] = sources_len
-    stats_map["Sources Operational Data"] = sources_operational_len
-    stats_map["Entry rules"] = entry_rules_len
-    stats_map["Social data"] = social_len
-    stats_map["AppLogging"] = applogging_len
+    stats_map["Entries"] = connection.entries_table.count()
+    stats_map["Sources"] = connection.sources_table.count()
+    stats_map["Sources Operational Data"] = connection.sourceoperationaleata.count()
+    stats_map["Entry rules"] = connection.entry_rules.count()
+    stats_map["Social data"] = connection.socialdata.count()
+    stats_map["AppLogging"] = connection.applogging.count()
+    stats_map["ConfigurationEntry"] = connection.configurationentry.count()
+    stats_map["BackgroundJobs"] = connection.backgroundjob.count()
 
     stats_map["System state"] = system.is_system_ok()
 

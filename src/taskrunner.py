@@ -14,7 +14,7 @@ from .sourcedata import SourceData
 from .sources import Sources
 from .entries import Entries
 from .applogging import AppLogging
-from .jobhandlers import ProcessSourceJobHandler
+from .jobhandlers import *
 from .backgroundjobs import BackgroundJob
 
 
@@ -53,8 +53,6 @@ class TaskRunner(object):
         except Exception as e:
             traceback.print_exc()
 
-
-
     def init_sources(self, init_sources):
         self.controller.read_sources()
         #for source_url in init_sources:
@@ -80,10 +78,20 @@ class TaskRunner(object):
                 self.start_reading = False
 
                 self.connection = DbConnection(self.table_name)
+                self.controller = Controller(connection=self.connection)
+
+                if self.controller.get_due_sources_path().exists():
+                    print("Found sources to add")
+                    sources = self.controller.get_sources_to_add()
+                    print("sources:")
+                    print(sources)
+                    self.controller.add_sources(sources)
+
                 # do the reading
                 if not self.handle_one_job():
                     AppLogging(self.connection).debug("Sleeping")
                     time.sleep(10)
+
                 self.connection.close()
 
                 system.set_thread_ok()
@@ -110,21 +118,22 @@ class TaskRunner(object):
     def handle_one_job(self):
         job = self.get_job()
         if not job:
+            BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_CLEANUP)
             self.check_sources()
             return False
 
         handler = None
         if job.job == BackgroundJob.JOB_PROCESS_SOURCE:
-            AppLogging(self.connection).debug("Processing source")
             handler = ProcessSourceJobHandler(connection = self.connection, job=job, table_name = self.table_name)
-            AppLogging(self.connection).debug("Processing source DONE")
+        elif job.job == BackgroundJob.JOB_CLEANUP:
+            handler = CleanupJobHandler(connection = self.connection, job=job, table_name = self.table_name)
         else:
             raise IOError("Unsupported job")
 
         if handler:
-            AppLogging(self.connection).debug(f"Running source process handler: job ID:{job.id}")
+            AppLogging(self.connection).debug(f"Running job {job.job} ID:{job.id}")
             handler.run()
             handler.close()
-            AppLogging(self.connection).debug(f"Running source process handler: job ID:{job.id} DONE")
+            AppLogging(self.connection).debug(f"Running job {job.job} ID:{job.id} DONE")
 
             return True
