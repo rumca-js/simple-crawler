@@ -1,6 +1,6 @@
 version: '3.7'
 services:
-  yafr:
+  simple-crawler:
     image: rozbujnik/simple-crawler
     container_name: simple-crawler
     build:
