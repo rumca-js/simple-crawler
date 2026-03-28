@@ -41,7 +41,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
         source_id = int(self.job.subject)
         sources = Sources(self.connection)
         source = sources.get(id=source_id)
-        self.check_source(source)
+        if source is not None:
+            self.check_source(source)
+        # source might have been removed
 
     def check_source(self, source):
         url = self.get_response_real(source)
