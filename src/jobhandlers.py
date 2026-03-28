@@ -11,6 +11,7 @@ from webtoolkit import (
    HTTP_STATUS_TOO_MANY_REQUESTS,
 )
 
+from .controller import Controller
 from .sources import Sources
 from .entries import Entries
 from .sourcedata import SourceData
