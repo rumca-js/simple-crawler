@@ -7,7 +7,7 @@
 #  https://stackoverflow.com/questions/60420940/how-to-fix-error-error-database-is-uninitialized-and-superuser-password-is-not
 
 
-APP_NAME=yafr
+APP_NAME=simple-crawler
 
 
 build:
