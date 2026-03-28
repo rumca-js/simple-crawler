@@ -54,10 +54,11 @@ class TaskRunner(object):
             traceback.print_exc()
 
     def init_sources(self, init_sources):
-        self.controller.read_sources()
+        # self.controller.add_sources()
         #for source_url in init_sources:
         #    sources = Sources(self.connection)
         #    sources.set(source_url)
+        pass
 
     def setup_start(self):
         entries = Entries(self.connection)
@@ -127,6 +128,10 @@ class TaskRunner(object):
             handler = ProcessSourceJobHandler(connection = self.connection, job=job, table_name = self.table_name)
         elif job.job == BackgroundJob.JOB_CLEANUP:
             handler = CleanupJobHandler(connection = self.connection, job=job, table_name = self.table_name)
+        elif job.job == BackgroundJob.JOB_LINK_UPDATE_DATA:
+            handler = UpdateLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
+        elif job.job == BackgroundJob.JOB_LINK_RESET_DATA:
+            handler = ResetLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
         else:
             raise IOError("Unsupported job")
 
@@ -137,3 +142,22 @@ class TaskRunner(object):
             AppLogging(self.connection).debug(f"Running job {job.job} ID:{job.id} DONE")
 
             return True
+
+    def add_update_jobs(self):
+        len_updated = 0
+        desired_len = 5
+
+        entries = Entries(self.connection)
+        entry_objs = self.connection.entries_table.get_where({"date_updated" : None}, limit=desired_len)
+        for entry in entry_objs:
+            BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA)
+            len_updated += 1
+
+        if len_updated < desired_len:
+            # TODO older than
+
+            #entry_objs = self.connection.entries_table.get_where({"date_updated" : None}, limit=desired_len)
+            #for entry in entry_objs:
+            #    BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA)
+            #    len_updated += 1
+            pass

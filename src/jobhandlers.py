@@ -14,9 +14,11 @@ from webtoolkit import (
 from .sources import Sources
 from .entries import Entries
 from .sourcedata import SourceData
-from .socialdata import SocialData
 from .applogging import AppLogging
 from .entryrules import EntryRules
+from .entryurlinterface import EntryUrlInterface
+from .controller import Controller
+from .urlhandler import UrlHandler
 
 
 class GenericJobHandler(object):
@@ -84,7 +86,6 @@ class ProcessSourceJobHandler(GenericJobHandler):
         #sources.delete_entries(source)
 
         links = self.get_links(url)
-        print(f"Found links {links}")
         entries = Entries(self.connection)
 
         for link in links:
@@ -118,32 +119,6 @@ class ProcessSourceJobHandler(GenericJobHandler):
 
         return True
 
-    def get_source_url(self, source):
-        if not source:
-            return
-        request = PageRequestObject(source.url)
-        request.timeout_s = 300
-
-        config = self.connection.configurationentry.get()
-        try:
-            if self.is_remote_server() or self.is_config_remote_server():
-                # TODO dates are strings
-                location = config.remote_webtools_server_location
-                if not location:
-                    location = RemoteUrl.get_remote_server_location()
-
-                url = RemoteUrl(request=request, remote_server_location=location)
-            else:
-                url = BaseUrl(request=request)
-            return url
-        except:
-            AppLogging(self.connection).notify(f"Removing invalid source:{source.url}")
-            sources = Sources(self.connection)
-            sources.delete(id=source.id)
-
-    def is_remote_server(self):
-        return RemoteUrl.get_remote_server_location()
-    
     def on_done(self, response):
         pass
 
@@ -184,20 +159,14 @@ class ProcessSourceJobHandler(GenericJobHandler):
         return True
 
     def process_link(self, link, source):
-        entry = self.link_to_entry(link, source)
-        if self.is_entry_ok(entry, source):
+        entry_json = self.link_to_entry(link, source)
+        if self.is_entry_ok(entry_json, source):
             entries = Entries(self.connection)
-            entry_id = entries.add(entry, source)
+            entry_id = entries.add(entry_json, source)
+            entry = entries.get(id=entry_id)
 
-            social_data_info = self.link_to_social_data(link)
-            if social_data_info:
-                social_data = SocialData(self.connection)
-                social_data.add(entry_id, social_data_info)
-
-    def link_to_social_data(self, link):
-        url = self.get_link_url(link)
-        social_data_info = url.get_social_properties()
-        return social_data_info
+            controller = Controller(self.connection)
+            controller.add_social_data(entry)
 
     def get_links(self, url):
         response = url.get_response()
@@ -209,56 +178,75 @@ class ProcessSourceJobHandler(GenericJobHandler):
         return []
 
     def link_to_entry(self, link, source):
-        url = self.get_link_url(link)
+        handler = UrlHandler(connection=self.connection, link=link)
+        url = handler.get_link_url()
         url.get_response()
 
-        entry = {}
-        entry["link"] = link
-        entry["title"] = url.get_title()
-        entry["description"] = url.get_description()
-        entry["status_code"] = url.get_status_code()
-        entry["thumbnail"] = url.get_thumbnail()
-        if source:
-            entry["source_id"] = source.id
+        entry_interface = EntryUrlInterface(url=url, source=source)
+        entry = entry_interface.get_entry_json()
 
         return entry
 
     def get_source_url(self, source):
-        url = self.get_link_url(source.url)
+        handler = UrlHandler(connection=self.connection, link=source.url)
+        url = handler.get_link_url()
         if not url:
             AppLogging(self.connection).notify(f"Removing invalid source:{source.url}")
             sources = Sources(self.connection)
             sources.delete(id=source.id)
         return url
 
-    def get_link_url(self, link):
-        request = PageRequestObject(link)
-        request.timeout_s = 300
 
-        config = self.connection.configurationentry.get()
-        try:
-            if self.is_remote_server() or self.is_config_remote_server():
-                # TODO dates are strings
-                location = config.remote_webtools_server_location
-                if not location:
-                    location = RemoteUrl.get_remote_server_location()
+class UpdateLinkJobHandler(GenericJobHandler):
+    def run(self):
+        entry_id = int(self.job.subject)
+        entries = Entries(self.connection)
+        entry = entries.get(id=entry_id)
+        self.update_entry(entry)
 
-                url = RemoteUrl(request=request, remote_server_location=location)
-            else:
-                url = BaseUrl(request=request)
-            return url
-        except:
-            AppLogging(self.connection).notify(f"Cannot obtain data for:{link}")
+    def update_entry(self, entry):
+        handler = UrlHandler(connection=self.connection, link=entry.link)
+        url = handler.get_link_url()
 
-    def is_config_remote_server(self):
-        config = self.connection.configurationentry.get()
-        if config.remote_webtools_server_location is None:
-            return False
-        if config.remote_webtools_server_location == "":
-            return False
-        if config.remote_webtools_server_location == "None":
-            return False
-        return True
+        json_data = {}
+        json_data["date_updated"] = datetime.now()
+
+        #if not entry.title:
+        #    entry.title = url.get_title()
+        #if not entry.description:
+        #    entry.description = url.get_description()
+        ##TODO implement rest
+
+        controller = Controller(self.connection)
+        controller.add_social_data(entry)
+
+        self.connection.entries_table.update_json_data(id=entry.id, json_data=json_data)
+
+
+class ResetLinkJobHandler(GenericJobHandler):
+    def run(self):
+        entry_id = int(self.job.subject)
+        entries = Entries(self.connection)
+        entry = entries.get(id=entry_id)
+        self.reset_entry(entry)
+
+    def reset_entry(self, entry):
+        handler = UrlHandler(connection=self.connection, link=entry.link)
+        url = handler.get_link_url()
+
+        json_data = {}
+        json_data["date_updated"] = datetime.now()
+
+        #if url.get_title():
+        #    entry.title = url.get_title()
+        #if url.get_description():
+        #    entry.description = url.get_description()
+        ##TODO implement rest
+
+        controller = Controller(self.connection)
+        controller.add_social_data(entry)
+
+        self.connection.entries_table.update_json_data(id=entry.id, json_data=json_data)
 
 
 class CleanupJobHandler(GenericJobHandler):
