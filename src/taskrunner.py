@@ -119,6 +119,7 @@ class TaskRunner(object):
     def handle_one_job(self):
         job = self.get_job()
         if not job:
+            self.add_update_jobs()
             BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_CLEANUP)
             self.check_sources()
             return False
@@ -150,7 +151,7 @@ class TaskRunner(object):
         entries = Entries(self.connection)
         entry_objs = self.connection.entries_table.get_where({"date_update_last" : None}, limit=desired_len)
         for entry in entry_objs:
-            BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA)
+            BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry.id))
             len_updated += 1
 
         if len_updated < desired_len:
@@ -158,6 +159,6 @@ class TaskRunner(object):
 
             #entry_objs = self.connection.entries_table.get_where({"date_update_last" : None}, limit=desired_len)
             #for entry in entry_objs:
-            #    BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA)
+            #    BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry.id))
             #    len_updated += 1
             pass

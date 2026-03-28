@@ -1,5 +1,6 @@
 import subprocess
 import time
+from datetime import datetime
 
 from webtoolkit import (
    BaseUrl,
@@ -205,8 +206,14 @@ class ProcessSourceJobHandler(GenericJobHandler):
 
 class UpdateLinkJobHandler(GenericJobHandler):
     def run(self):
-        entry_id = int(self.job.subject)
         entries = Entries(self.connection)
+
+        try:
+            entry_id = int(self.job.subject)
+        except Exception as E:
+            AppLogging(self.connection).exc(E)
+            return
+
         entry = entries.get(id=entry_id)
         self.update_entry(entry)
 
@@ -215,12 +222,13 @@ class UpdateLinkJobHandler(GenericJobHandler):
         url = handler.get_link_url()
 
         json_data = {}
-        json_data["date_updated"] = datetime.now()
+        json_data["date_update_last"] = datetime.now()
 
-        #if not entry.title:
-        #    entry.title = url.get_title()
-        #if not entry.description:
-        #    entry.description = url.get_description()
+        if not entry.title:
+            json_data["title"] = url.get_title()
+        if not entry.description:
+            json_data["description"] = url.get_description()
+        json_data["status_code"] = url.get_status_code()
         ##TODO implement rest
 
         controller = Controller(self.connection)
@@ -231,8 +239,13 @@ class UpdateLinkJobHandler(GenericJobHandler):
 
 class ResetLinkJobHandler(GenericJobHandler):
     def run(self):
-        entry_id = int(self.job.subject)
         entries = Entries(self.connection)
+        try:
+            entry_id = int(self.job.subject)
+        except Exception as E:
+            AppLogging(self.connection).exc(E)
+            return
+
         entry = entries.get(id=entry_id)
         self.reset_entry(entry)
 
@@ -243,10 +256,11 @@ class ResetLinkJobHandler(GenericJobHandler):
         json_data = {}
         json_data["date_updated"] = datetime.now()
 
-        #if url.get_title():
-        #    entry.title = url.get_title()
-        #if url.get_description():
-        #    entry.description = url.get_description()
+        if url.get_title():
+            json_data["title"] = url.get_title()
+        if url.get_description():
+            json_data["description"] = url.get_description()
+        json_data["status_code"] = url.get_status_code()
         ##TODO implement rest
 
         controller = Controller(self.connection)
