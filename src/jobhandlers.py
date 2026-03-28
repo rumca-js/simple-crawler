@@ -11,6 +11,7 @@ from webtoolkit import (
    HTTP_STATUS_TOO_MANY_REQUESTS,
 )
 
+from .controller import Controller
 from .sources import Sources
 from .entries import Entries
 from .sourcedata import SourceData
@@ -105,6 +106,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
             """
 
     def is_entry_ok(self, entry, source):
+        if entry is None:
+            return False
+
         link = entry.get("link")
         if not link:
             return False
