@@ -148,7 +148,7 @@ class TaskRunner(object):
         desired_len = 5
 
         entries = Entries(self.connection)
-        entry_objs = self.connection.entries_table.get_where({"date_updated" : None}, limit=desired_len)
+        entry_objs = self.connection.entries_table.get_where({"date_update_last" : None}, limit=desired_len)
         for entry in entry_objs:
             BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA)
             len_updated += 1
@@ -156,7 +156,7 @@ class TaskRunner(object):
         if len_updated < desired_len:
             # TODO older than
 
-            #entry_objs = self.connection.entries_table.get_where({"date_updated" : None}, limit=desired_len)
+            #entry_objs = self.connection.entries_table.get_where({"date_update_last" : None}, limit=desired_len)
             #for entry in entry_objs:
             #    BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA)
             #    len_updated += 1
