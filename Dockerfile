@@ -42,7 +42,7 @@ RUN poetry install --no-interaction --no-cache --without dev
 COPY . /app
 
 # Expose the port that Django will run on
-EXPOSE 5000
+EXPOSE 4000
 
 RUN ["chmod", "+x", "/app/docker-entrypoint.sh"]
 
