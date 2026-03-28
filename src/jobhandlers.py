@@ -104,6 +104,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
             """
 
     def is_entry_ok(self, entry, source):
+        if entry is None:
+            return False
+
         link = entry.get("link")
         if not link:
             return False
