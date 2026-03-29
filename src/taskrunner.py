@@ -81,11 +81,12 @@ class TaskRunner(object):
                 self.connection = DbConnection(self.table_name)
                 self.controller = Controller(connection=self.connection)
 
+                if not self.is_crawling_server_ok():
+                    AppLogging(self.connection).error("Crawling server error")
+                    time.sleep(60)
+
                 if self.controller.get_due_sources_path().exists():
-                    print("Found sources to add")
                     sources = self.controller.get_sources_to_add()
-                    print("sources:")
-                    print(sources)
                     self.controller.add_sources(sources)
 
                 # do the reading
@@ -162,3 +163,13 @@ class TaskRunner(object):
             #    BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry.id))
             #    len_updated += 1
             pass
+
+    def is_crawling_server_ok(self):
+        config = self.connection.configurationentry.get()
+        location = config.remote_webtools_server_location
+        if location:
+            request = PageRequestObject(location)
+            url = RemoteServer(remote_server=location)
+            if not url.get_pingj(url = location):
+                return False
+        return True

@@ -6,6 +6,7 @@ from webtoolkit import (
    BaseUrl,
    RemoteUrl,
    UrlLocation,
+   RemoteServer,
    PageRequestObject,
    ContentLinkParser,
    HTTP_STATUS_CODE_SERVER_TOO_MANY_REQUESTS,
@@ -16,6 +17,7 @@ from .controller import Controller
 from .sources import Sources
 from .entries import Entries
 from .sourcedata import SourceData
+from .socialdata import SocialData
 from .applogging import AppLogging
 from .entryrules import EntryRules
 from .entryurlinterface import EntryUrlInterface
@@ -63,6 +65,8 @@ class ProcessSourceJobHandler(GenericJobHandler):
                 AppLogging(self.connection).error(f"URL:{source.url} Response is invalid")
         else:
             AppLogging(self.connection).error(f"URL:{source.url} No response")
+
+        return True
 
     def get_response_real(self, source):
         while True:
@@ -165,6 +169,15 @@ class ProcessSourceJobHandler(GenericJobHandler):
 
         return True
 
+    def get_source_url(self, source):
+        handler = UrlHandler(connection=self.connection, link=source.url)
+        url = handler.get_link_url()
+        if not url:
+            AppLogging(self.connection).notify(f"Removing invalid source:{source.url}")
+            sources = Sources(self.connection)
+            sources.delete(id=source.id)
+        return url
+
     def process_link(self, link, source):
         entry_json = self.link_to_entry(link, source)
         if self.is_entry_ok(entry_json, source):
@@ -193,15 +206,6 @@ class ProcessSourceJobHandler(GenericJobHandler):
         entry = entry_interface.get_entry_json()
 
         return entry
-
-    def get_source_url(self, source):
-        handler = UrlHandler(connection=self.connection, link=source.url)
-        url = handler.get_link_url()
-        if not url:
-            AppLogging(self.connection).notify(f"Removing invalid source:{source.url}")
-            sources = Sources(self.connection)
-            sources.delete(id=source.id)
-        return url
 
 
 class UpdateLinkJobHandler(GenericJobHandler):
