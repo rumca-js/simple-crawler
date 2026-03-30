@@ -23,6 +23,7 @@ from .entryrules import EntryRules
 from .entryurlinterface import EntryUrlInterface
 from .controller import Controller
 from .urlhandler import UrlHandler
+from .configurationentry import ConfigurationEntry
 
 
 class GenericJobHandler(object):
@@ -185,8 +186,10 @@ class ProcessSourceJobHandler(GenericJobHandler):
             entry_id = entries.add(entry_json, source)
             entry = entries.get(id=entry_id)
 
-            controller = Controller(self.connection)
-            controller.add_social_data(entry)
+            config_entry = ConfigurationEntry(self.connection).get()
+            if config_entry.enable_social_data and config_entry.new_entries_fetch_social_data:
+                controller = Controller(self.connection)
+                controller.add_social_data(entry)
 
     def get_links(self, url):
         response = url.get_response()
@@ -239,10 +242,12 @@ class UpdateLinkJobHandler(GenericJobHandler):
         json_data["status_code"] = url.get_status_code()
         ##TODO implement rest
 
-        controller = Controller(self.connection)
-        controller.add_social_data(entry)
-
         self.connection.entries_table.update_json_data(id=entry.id, json_data=json_data)
+
+        config_entry = ConfigurationEntry(self.connection).get()
+        if config_entry.enable_social_data and config_entry.entry_update_fetches_social_data:
+            controller = Controller(self.connection)
+            controller.add_social_data(entry)
 
 
 class ResetLinkJobHandler(GenericJobHandler):
@@ -275,10 +280,12 @@ class ResetLinkJobHandler(GenericJobHandler):
         json_data["status_code"] = url.get_status_code()
         ##TODO implement rest
 
-        controller = Controller(self.connection)
-        controller.add_social_data(entry)
-
         self.connection.entries_table.update_json_data(id=entry.id, json_data=json_data)
+
+        config_entry = ConfigurationEntry(self.connection).get()
+        if config_entry.enable_social_data and config_entry.entry_update_fetches_social_data:
+            controller = Controller(self.connection)
+            controller.add_social_data(entry)
 
 
 class CleanupJobHandler(GenericJobHandler):

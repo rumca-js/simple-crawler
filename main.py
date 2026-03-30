@@ -492,6 +492,9 @@ def configuration():
     instance_fields["instance_description"] = config.instance_description
     instance_fields["display_type"] = config.display_type
     instance_fields["remote_webtools_server_location"] = config.remote_webtools_server_location
+    instance_fields["enable_social_data"] = config.enable_social_data
+    instance_fields["new_entries_fetch_social_data"] = config.new_entries_fetch_social_data
+    instance_fields["entry_update_fetches_social_data"] = config.entry_update_fetches_social_data
 
     html_text = get_view(CONFIGURATION_TEMPLATE, title="Configuration")
     return render_template_string(html_text, configuration=instance_fields)

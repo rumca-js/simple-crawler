@@ -16,6 +16,7 @@ from .entries import Entries
 from .applogging import AppLogging
 from .jobhandlers import *
 from .backgroundjobs import BackgroundJob
+from .configurationentry import ConfigurationEntry
 
 
 class TaskRunner(object):
@@ -45,6 +46,9 @@ class TaskRunner(object):
             sources_len = sources.count()
             if init_sources or sources_len == 0:
                 self.init_sources(init_sources)
+
+            config_entry = ConfigurationEntry(self.connection)
+            config_entry.reset()
 
             self.controller.close()
             self.connection.close()
