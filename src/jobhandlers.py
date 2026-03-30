@@ -290,22 +290,7 @@ class ResetLinkJobHandler(GenericJobHandler):
 
 class CleanupJobHandler(GenericJobHandler):
     def run(self):
-        self.add_due_sources()
-
         entries = Entries(self.connection)
         entries.cleanup()
         sources_data = SourceData(self.connection)
         sources_data.cleanup()
-
-    def add_due_sources(self):
-        status = False
-
-        self.controller = Controller(connection=self.connection)
-
-        sources = self.controller.get_sources_to_add()
-        if sources:
-            self.start_reading = True
-            self.controller.add_sources(sources)
-            status = True
-
-        return status
