@@ -33,7 +33,7 @@ def get_view(body, title=""):
 
 
 INDEX_TEMPLATE = """
-<h1>YAFR - Yet Another Feed Reader v{{version}}</h1>
+<h1>{title} v{{version}}</h1>
 <ul>
   <li><a href="/search">Search</a>
   <li><a href="/sources">Sources</a>
