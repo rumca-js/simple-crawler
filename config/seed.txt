@@ -7,7 +7,7 @@ https://raw.githubusercontent.com/rust-unofficial/awesome-rust/refs/heads/main/R
 https://raw.githubusercontent.com/ziadoz/awesome-php/refs/heads/master/README.md
 https://raw.githubusercontent.com/enaqx/awesome-react/refs/heads/master/README.md
 https://raw.githubusercontent.com/vuejs/awesome-vue/refs/heads/master/README.md
-https://raw.githubusercontent.com/sindresorhus/awesome-nodejs/refs/heads/master/README.md
+https://raw.githubusercontent.com/sindresorhus/awesome-nodejs/refs/heads/main/readme.md
 https://raw.githubusercontent.com/josephmisiti/awesome-machine-learning/refs/heads/master/README.md
 https://raw.githubusercontent.com/Hannibal046/Awesome-LLM/refs/heads/main/README.md
 https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/refs/heads/main/README.md
@@ -24,7 +24,7 @@ https://raw.githubusercontent.com/KrishMunot/awesome-startup/refs/heads/master/R
 https://raw.githubusercontent.com/gztchan/awesome-design/refs/heads/master/README.md
 https://raw.githubusercontent.com/awesome-css-group/awesome-css/refs/heads/master/README.md
 https://raw.githubusercontent.com/EbookFoundation/free-programming-books/refs/heads/main/README.md
-https://raw.githubusercontent.com/awesomedata/awesome-public-datasets/refs/heads/master/README.md
+https://raw.githubusercontent.com/awesomedata/awesome-public-datasets/refs/heads/master/README.rst
 https://raw.githubusercontent.com/dicktracey909/awesome-adhd-tools/refs/heads/main/README.md
 https://raw.githubusercontent.com/dicktracey909/awesome-construction-calculators/refs/heads/main/README.md
 https://raw.githubusercontent.com/stax76/awesome-mpv/refs/heads/main/README.md

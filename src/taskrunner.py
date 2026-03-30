@@ -99,7 +99,7 @@ class TaskRunner(object):
                 system.set_thread_ok()
             except Exception as E:
                 AppLogging(self.connection).exc(E)
-                time.sleep(1)
+                time.sleep(10)
 
     def get_job(self):
         order_by = self.connection.backgroundjob.get_table().c.date_created

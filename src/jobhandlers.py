@@ -120,7 +120,7 @@ class ProcessSourceJobHandler(GenericJobHandler):
         if not link:
             return False
 
-        if source.xpath:
+        if source.xpath and source.xpath != "":
             try:
                 if re.search(source.xpath, link) is None:
                     return False
@@ -224,6 +224,10 @@ class UpdateLinkJobHandler(GenericJobHandler):
     def update_entry(self, entry):
         handler = UrlHandler(connection=self.connection, link=entry.link)
         url = handler.get_link_url()
+        response = url.get_response()
+        if response is None:
+            AppLogging(self.connection).error("URL:{enry.link} Response is None")
+            return
 
         json_data = {}
         json_data["date_update_last"] = datetime.now()
@@ -256,6 +260,10 @@ class ResetLinkJobHandler(GenericJobHandler):
     def reset_entry(self, entry):
         handler = UrlHandler(connection=self.connection, link=entry.link)
         url = handler.get_link_url()
+        response = url.get_response()
+        if response is None:
+            AppLogging(self.connection).error("URL:{enry.link} Response is None")
+            return
 
         json_data = {}
         json_data["date_updated"] = datetime.now()

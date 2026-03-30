@@ -26,6 +26,7 @@ from src.serializers import entry_to_json, source_to_json, source_and_entries_to
 from src.controller import Controller
 from src.system import System
 from src.entryrules import EntryRules
+from src.socialdata import SocialData
 from src.sources import Sources
 from src.applogging import AppLogging
 
@@ -514,7 +515,14 @@ def api_entries():
     for entry in entries:
         if entry.source_id:
             entry_source = connection.sources_table.get(id=entry.source_id)
-            json_entry_data = entry_to_json(entry, with_id=True, source=entry_source)
+
+            socialdata = SocialData(connection=connection)
+            social_data_object = socialdata.get(entry_id=entry.id)
+
+            json_entry_data = entry_to_json(entry,
+                                            with_id=True,
+                                            source=entry_source,
+                                            social_data=social_data_object)
             json_entries.append(json_entry_data)
 
     json_data = {}

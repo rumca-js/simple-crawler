@@ -27,6 +27,7 @@ class UrlHandler(object):
                     location = RemoteUrl.get_remote_server_location()
 
                 url = RemoteUrl(request=request, remote_server_location=location)
+                url.url = request.url # TODO remove it
             else:
                 url = BaseUrl(request=request)
             return url
