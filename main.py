@@ -179,7 +179,7 @@ def index():
     connection = DbConnection(table_name)
     config = connection.configurationentry.get_first()
     html_text = get_view(INDEX_TEMPLATE, title=config.instance_title)
-    return render_template_string(html_text, version=__version__)
+    return render_template_string(html_text, version=__version__, title=config.instance_title)
 
 
 @app.route('/scripts/<path:filename>')
