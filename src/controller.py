@@ -34,6 +34,18 @@ class Controller(object):
                 sources = Sources(self.connection)
                 sources.set(source_url)
 
+    def add_links(self, link_urls):
+        self.start_reading = True
+
+        entries = Entries(connection=self.connection)
+
+        for link_url in link_urls:
+            if entries.exists(link=link_url):
+                continue
+
+            if not self.is_url_blocked(link_url):
+                BackgroundJob.create_single_job(BackgroundJob.JOB_LINK_ADD, subject=link_url)
+
     def is_url_blocked(self, url):
         entry_rules = EntryRules(self.connection)
         for rule in entry_rules.get_rules_for(url=url):
@@ -45,6 +57,10 @@ class Controller(object):
     def add_sources_text(self, raw_text):
         source_urls = read_line_things(raw_text)
         self.add_sources(source_urls)
+
+    def add_links_text(self, raw_text):
+        links_urls = read_line_things(raw_text)
+        self.add_links(links_urls)
 
     def add_social_data(self, entry):
         link = entry.link

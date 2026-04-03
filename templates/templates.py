@@ -37,13 +37,25 @@ INDEX_TEMPLATE = """
 <ul>
   <li><a href="/search">Search</a>
   <li><a href="/sources">Sources</a>
-  <li><a href="/add-sources">Add sources</a>
-  <li><a href="/remove-all-sources">Remove all sources</a>
-  <li><a href="/remove-all-entries">Remove all entries</a>
-  <li><a href="/block-rules">Block rules</a>
   <li><a href="/logs">Logs</a>
   <li><a href="/jobs">Jobs</a>
-  <li><a href="/stats">Status</a>
+  <li><a href="/status">Status</a>
+  <li><a href="/admin">Admin</a>
+</ul>
+"""
+
+
+ADMIN_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+<h1>Admin</h1>
+<ul>
+  <li><a href="/add-sources">Add sources</a>
+  <li><a href="/block-rules">Block rules</a>
+  <li><a href="/remove-all-sources">Remove all sources</a>
+  <li><a href="/remove-all-entries">Remove all entries</a>
   <li><a href="/configuration">Configuration</a>
 </ul>
 """
@@ -237,9 +249,11 @@ SOURCE_TEMPLATE = """
 <h1>Source {{source_item.title}}</h1>
 
 <div>ID:{{source_item.id}}</div>
+<div>Enabled:{{source_item.enabled}}</div>
 <div>Search:<a href="/search?search=source_id=={{source_item.id}}">Search</a></div>
 <div>Url:<a href="{{source_item.url}}">{{source_item.url}}</a></div>
-<div>Thumbnail:<a href="{{source_item.thumbnail}}">{{source_item.thumbnail}}</a></div>
+<div>Thumbnail:<a href="{{source_item.favicon}}">{{source_item.favicon}}</a></div>
+<div>XPath:{{source_item.xpath}}</div>
 
 <div>Date fetched:{{source_op_data.date_fetched}}</div>
 
@@ -296,6 +310,20 @@ Will block sources, and entries.
     <br>
     <button type="submit">Save</button>
 </form>
+"""
+
+BLOCK_RULES_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Block rules</h1>
+
+<ul>
+  <li><a href="/define-block-rules">Define block rules</a>
+  <li><a href="/block-url">Block Url</a>
+</ul>
 """
 
 

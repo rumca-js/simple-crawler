@@ -1,4 +1,5 @@
 from datetime import datetime
+from .socialdata import SocialData
 
 
 class Entries(object):
@@ -35,14 +36,17 @@ class Entries(object):
         return self.connection.entries_table.count()
 
     def delete(self, id):
+        socialdata = SocialData(self.connection)
+        socialdata.delete(entry_id = id)
         self.connection.entries_table.delete(id=id)
 
     def get(self,id):
         return self.connection.entries_table.get(id=id)
 
-    def cleanup(self):
-        # TODO remove social data
+    def exists(self,link=None):
+        return self.connection.entries_table.exists(link=link)
 
+    def cleanup(self):
         ids_to_remove = set()
         for entry in self.connection.entries_table.get_where():
             if not self.connection.sources_table.get(id=entry.source_id):
@@ -50,3 +54,11 @@ class Entries(object):
 
         for id in ids_to_remove:
             self.connection.entries_table.delete(id=id)
+
+    def delete_where(self, conditions):
+        entries = self.connection.entries_table.get_where(conditions)
+        for entry in entries:
+            socialdata = SocialData(self.connection)
+            socialdata.delete(entry_id = entry.id)
+
+        self.connection.entries_table.delete_where(conditions)

@@ -134,42 +134,6 @@ class ProcessSourceJobHandler(GenericJobHandler):
     def on_done(self, response):
         pass
 
-    def process_source(self, index, source_id, source_count):
-        sources = Sources(self.connection)
-        source = sources.get(id=source_id)
-
-        if not source:
-            AppLogging(self.connection).debug(f"Source id: {source_id} Could not find source")
-            return False
-
-        if not source.enabled:
-            AppLogging(self.connection).debug(f"Source id: {source_id} Source is not enabled")
-            return False
-
-        rules = EntryRules(self.connection)
-        if rules.is_entry_rule_triggered(source.url):
-            sources = Sources(connection=self.connection)
-            sources.delete(id=source.id)
-            return False
-
-        sources_data = SourceData(self.connection)
-
-        if not sources_data.is_update_needed(source):
-            now = datetime.now()
-            AppLogging(self.connection).debug(f"{source.url}: Update not needed @ {now}")
-            return False
-
-        AppLogging(self.connection).debug(f"{index}/{source_count} {source.url} {source.title}: Reading")
-        self.check_source(source)
-
-        #writer = SourceWriter(connection=self.connection, source=source)
-        #writer.write()
-
-        AppLogging(self.connection).debug(f"{index}/{source_count} {source.url} {source.title}: Reading DONE")
-        time.sleep(1)
-
-        return True
-
     def get_source_url(self, source):
         handler = UrlHandler(connection=self.connection, link=source.url)
         url = handler.get_link_url()
@@ -288,9 +252,34 @@ class ResetLinkJobHandler(GenericJobHandler):
             controller.add_social_data(entry)
 
 
+class AddLinkJobHandler(GenericJobHandler):
+    def run(self):
+        link_url = self.job.subject
+
+        entries = Entries(connection=self.connection)
+        if entries.exists(link=link_url):
+            return
+
+        handler = UrlHandler(connection=self.connection, link=source.url)
+        url = handler.get_link_url()
+        if not url.is_valid():
+            return
+
+        interface = EntryUrlInterface(url=url)
+        entry_json = interface.get_entry_json()
+        if not entry_json:
+            return
+
+        entries.add(entry_json)
+
+
 class CleanupJobHandler(GenericJobHandler):
     def run(self):
         entries = Entries(self.connection)
         entries.cleanup()
+
         sources_data = SourceData(self.connection)
         sources_data.cleanup()
+
+        social_data = SocialData(self.connection)
+        social_data.cleanup()

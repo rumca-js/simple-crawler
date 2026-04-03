@@ -5,6 +5,7 @@ import traceback
 
 from webtoolkit import (
    RemoteUrl,
+   RemoteServer,
 )
 
 from .dbconnection import DbConnection
@@ -124,16 +125,9 @@ class TaskRunner(object):
             self.check_sources()
             return False
 
-        handler = None
-        if job.job == BackgroundJob.JOB_PROCESS_SOURCE:
-            handler = ProcessSourceJobHandler(connection = self.connection, job=job, table_name = self.table_name)
-        elif job.job == BackgroundJob.JOB_CLEANUP:
-            handler = CleanupJobHandler(connection = self.connection, job=job, table_name = self.table_name)
-        elif job.job == BackgroundJob.JOB_LINK_UPDATE_DATA:
-            handler = UpdateLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
-        elif job.job == BackgroundJob.JOB_LINK_RESET_DATA:
-            handler = ResetLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
-        else:
+        handler = self.job2handler(job)
+
+        if not handler:
             raise IOError("Unsupported job")
 
         if handler:
@@ -143,6 +137,16 @@ class TaskRunner(object):
             AppLogging(self.connection).debug(f"Running job {job.job} ID:{job.id} DONE")
 
             return True
+        
+    def job2handler(self, job):
+        if job.job == BackgroundJob.JOB_PROCESS_SOURCE:
+            return ProcessSourceJobHandler(connection = self.connection, job=job, table_name = self.table_name)
+        elif job.job == BackgroundJob.JOB_CLEANUP:
+            return CleanupJobHandler(connection = self.connection, job=job, table_name = self.table_name)
+        elif job.job == BackgroundJob.JOB_LINK_UPDATE_DATA:
+            return UpdateLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
+        elif job.job == BackgroundJob.JOB_LINK_RESET_DATA:
+            return ResetLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
 
     def add_update_jobs(self):
         len_updated = 0
