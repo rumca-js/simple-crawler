@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simple-crawler"
-version = "1.0.4"
+version = "1.0.5"
 description = "Internet list database"
 authors = ["Iwan Grozny <renegat@renegat0x0.ddns.net>"]
 license = "GPL3"
