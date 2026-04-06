@@ -50,8 +50,9 @@ class Entries(object):
     def cleanup(self):
         ids_to_remove = set()
         for entry in self.connection.entries_table.get_where():
-            if not self.connection.sources_table.get(id=entry.source_id):
-                ids_to_remove.add(entry.id)
+            if entry.source_id is not None:
+                if not self.connection.sources_table.get(id=entry.source_id):
+                    ids_to_remove.add(entry.id)
 
         for id in ids_to_remove:
             self.connection.entries_table.delete(id=id)
