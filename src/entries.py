@@ -6,11 +6,13 @@ class Entries(object):
     def __init__(self, connection):
         self.connection = connection
 
-    def add(self, entry_json, source):
+    def add(self, entry_json, source=None):
         if self.connection.entries_table.exists(link=entry_json["link"]):
             return
 
-        entry_json["source_url"] = source.url
+        if source:
+            entry_json["source_url"] = source.url
+            entry_json["source_id"] = source.id
 
         if "source" in entry_json:
             del entry_json["source"]
@@ -22,7 +24,6 @@ class Entries(object):
             del entry_json["tags"]
 
         entry_json["date_created"] = datetime.now()
-        entry_json["source_id"] = source.id
 
         try:
             entry_id = self.connection.entries_table.insert_json(entry_json)

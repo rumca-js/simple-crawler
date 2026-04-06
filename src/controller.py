@@ -1,7 +1,9 @@
 from pathlib import Path
 from datetime import datetime
 
+from .backgroundjobs import BackgroundJob
 from .sourcedata import SourceData
+from .entries import Entries
 from .sources import Sources
 from .entryrules import EntryRules
 from .socialdata import SocialData
@@ -44,7 +46,7 @@ class Controller(object):
                 continue
 
             if not self.is_url_blocked(link_url):
-                BackgroundJob.create_single_job(BackgroundJob.JOB_LINK_ADD, subject=link_url)
+                BackgroundJob(connection=self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_ADD, subject=link_url)
 
     def is_url_blocked(self, url):
         entry_rules = EntryRules(self.connection)

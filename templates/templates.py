@@ -52,6 +52,7 @@ ADMIN_TEMPLATE = """
 </div>
 <h1>Admin</h1>
 <ul>
+  <li><a href="/add-links">Add links</a>
   <li><a href="/add-sources">Add sources</a>
   <li><a href="/block-rules">Block rules</a>
   <li><a href="/remove-all-sources">Remove all sources</a>
