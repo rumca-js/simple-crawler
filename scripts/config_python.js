@@ -41,6 +41,11 @@ function getEntryTagAPI() {
 }
 
 
+function getEntryRemoveAPI() {
+   return `/remove-entry`;
+}
+
+
 function getEntryLocalLink(entry) {
     return `?entry_id=${entry.id}`;
 }
