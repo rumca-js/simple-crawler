@@ -270,6 +270,25 @@ SOURCE_TEMPLATE = """
 </form>
 """
 
+
+ADD_LINKS_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Add links</h1>
+
+<form method="POST">
+    <p>One source URL per line:</p>
+    <textarea name="sources">
+{{raw_data}}
+    </textarea>
+    <br>
+    <button type="submit">Add</button>
+</form>
+"""
+
 ADD_SOURCES_TEMPLATE = """
 <div class="nav-buttons">
     <button class="btn btn-primary" onclick="history.back()">Go back</button>
@@ -294,6 +313,33 @@ You can find RSS sources at:
    <li><a href="https://github.com/plenaryapp/awesome-rss-feeds">Awesome RSS feeds</a></li>
   </ul>
 </p>
+"""
+
+ENTRY_EDIT_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<form method="POST">
+    <div><label for="{{config_setting}}">{{config_setting}}</label></div>
+    <div><input type="search" id="{{config_setting}}" name="{{config_setting}}" value="{{config_value}}"/></div>
+   <button type="submit">Save</button>
+</form>
+"""
+
+
+ENTRY_TAG_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<form method="POST">
+    <div><label for="entry-tag">Tag:</label></div>
+    <div><input type="search" id="entry-tag" name="entry-tag" value="{{current_tags}}"/></div>
+   <button type="submit">Save</button>
+</form>
 """
 
 

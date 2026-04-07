@@ -31,8 +31,13 @@ function getEntryAPI() {
 }
 
 
-function getEntryDeleteAPI() {
+function getEntryEditAPI() {
    return `/entry-edit`;
+}
+
+
+function getEntryTagAPI() {
+   return `/entry-tag`;
 }
 
 

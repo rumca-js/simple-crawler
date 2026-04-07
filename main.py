@@ -305,8 +305,54 @@ def add_links():
         html_text = get_view(template_html, title="OK")
         return render_template_string(html_text)
 
-    html_text = get_view(ADD_SOURCES_TEMPLATE, title="Add links")
+    html_text = get_view(ADD_LINKS_TEMPLATE, title="Add links")
     return render_template_string(html_text, raw_data="")
+
+
+@app.route("/entry-edit", methods=["GET", "POST"])
+def entry_edit():
+    connection = DbConnection(table_name)
+
+    entry_id = request.args.get("id")
+
+    if request.method == "POST":
+        title = request.form.get("title", "")
+
+        entries = Entries(connection)
+        entry = entries.get(id=entry_id)
+
+        json = entry_to_json(entry)
+        json["title"] = title
+
+        entries.update_json_data(id=entry_id, json_data=json)
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    html_text = get_view(ENTRY_EDIT_TEMPLATE, title="Edit entry")
+    return render_template_string(html_text, entry_id=entry_id)
+
+
+@app.route("/entry-tag", methods=["GET", "POST"])
+def entry_tag():
+    connection = DbConnection(table_name)
+
+    entry_id = request.args.get("id")
+    current_tags = ""
+
+    if request.method == "POST":
+        entry_tags = request.form.get("entry-tag", "")
+
+        tags = EntryTags(connection=connection)
+        tags.set(entry_tags)
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    html_text = get_view(ENTRY_TAG_TEMPLATE, title="Tag entry")
+    return render_template_string(html_text, entry_id=entry_id, current_tags=current_tags)
 
 
 @app.route("/rss/<int:source_id>", methods=["GET", "POST"])
