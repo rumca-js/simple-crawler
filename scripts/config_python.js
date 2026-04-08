@@ -41,6 +41,11 @@ function getEntryTagAPI() {
 }
 
 
+function getEntryVoteAPI() {
+   return `/entry-vote`;
+}
+
+
 function getEntryRemoveAPI() {
    return `/remove-entry`;
 }

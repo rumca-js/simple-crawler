@@ -17,7 +17,7 @@ def social_data_to_json(social_data):
 
     return json_entry
 
-def entry_to_json(entry, with_id=False, source=None, social_data=None):
+def entry_to_json(entry, with_id=False, source=None, social_data=None, tags=None):
     json_entry = {}
 
     if with_id:
@@ -55,6 +55,9 @@ def entry_to_json(entry, with_id=False, source=None, social_data=None):
 
     json_entry["backgroundcolor"] = None
     json_entry["alpha"] = 1.0
+
+    if tags:
+        json_entry["tags"] = tags
 
     #json_entry["status_code_str"] = status_code_to_text(entry.status_code)
     #json_entry["contents_hash"] = json_encode_field(entry.contents_hash)

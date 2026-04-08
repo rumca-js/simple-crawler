@@ -562,6 +562,7 @@ function getViewMenu(entry) {
 function getEntryEditMenu(entry) {
     let entry_edit = getEntryEditAPI();
     let entry_tag = getEntryTagAPI();
+    let entry_vote = getEntryVoteAPI();
     let entry_remove = getEntryRemoveAPI();
     let html = "";
 
@@ -578,6 +579,11 @@ function getEntryEditMenu(entry) {
         <li>
           <a href="${entry_edit}?id=${entry.id}" id="Edit" class="dropdown-item" title="Edit">
              Edit
+          </a>
+        </li>
+        <li>
+          <a href="${entry_vote}?id=${entry.id}" id="Vote" class="dropdown-item" title="Vote">
+             Vote
           </a>
         </li>
         <li>

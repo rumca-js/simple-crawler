@@ -329,6 +329,20 @@ ENTRY_EDIT_TEMPLATE = """
 """
 
 
+ENTRY_VOTE_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<form method="POST">
+    <div><label for="entry-vote">Vote:</label></div>
+    <div><input type="search" id="entry-vote" name="entry-vote" value="{{current_vote}}"/></div>
+   <button type="submit">Save</button>
+</form>
+"""
+
+
 ENTRY_TAG_TEMPLATE = """
 <div class="nav-buttons">
     <button class="btn btn-primary" onclick="history.back()">Go back</button>

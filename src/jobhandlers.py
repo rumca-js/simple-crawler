@@ -20,6 +20,7 @@ from .sourcedata import SourceData
 from .socialdata import SocialData
 from .applogging import AppLogging
 from .entryrules import EntryRules
+from .entrytags import EntryTags
 from .entryurlinterface import EntryUrlInterface
 from .controller import Controller
 from .urlhandler import UrlHandler
@@ -292,3 +293,6 @@ class CleanupJobHandler(GenericJobHandler):
 
         social_data = SocialData(self.connection)
         social_data.cleanup()
+
+        tags = EntryTags(self.connection)
+        tags.cleanup()

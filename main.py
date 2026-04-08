@@ -7,6 +7,7 @@ import threading
 import argparse
 import shutil
 from pathlib import Path
+from sqlalchemy import select, or_
 from flask import (
    Flask,
    render_template_string,
@@ -29,6 +30,8 @@ from src.entryrules import EntryRules
 from src.socialdata import SocialData
 from src.sources import Sources
 from src.applogging import AppLogging
+from src.entryvotes import EntryVotes
+from src.entrytags import EntryTags
 
 
 __version__ = "0.0.0"
@@ -70,7 +73,7 @@ class PagePagination:
         return page_size
 
 
-def parse_search(search, table):
+def parse_search(search, table, tags_table):
     """
     Supports:
       - "keyword"                  → search all fields
@@ -109,44 +112,36 @@ def parse_search(search, table):
             return [column.ilike(f"%{value}%")]
 
     return [
-        table.c.title.ilike(f"%{search}%"),
-        table.c.description.ilike(f"%{search}%"),
-        table.c.link.ilike(f"%{search}%"),
-        table.c.source_url.ilike(f"%{search}%"),
+          table.c.title.ilike(f"%{search}%"),
+          table.c.description.ilike(f"%{search}%"),
+          table.c.link.ilike(f"%{search}%"),
+          table.c.source_url.ilike(f"%{search}%"),
+          tags_table.c.tag.ilike(f"%{search}%"),
     ]
 
 
 def get_entries_for_request(connection, limit, offset, search=None):
     table = connection.entries_table.get_table()
-    order_by = [
-      table.c.date_published.desc()
-    ]
+    tags_table = connection.entrycompactedtags.get_table()
 
-    conditions = parse_search(search, table)
+    conditions = parse_search(search, table, tags_table)
+
+    entries_select = (select(table, tags_table.c.tag)
+                     .outerjoin(tags_table, table.c.id == tags_table.c.entry_id)
+                     .order_by(table.c.page_rating_votes.desc())
+                     )
 
     if conditions:
-        entries = list(connection.entries_table.get_where(limit=limit,
-                                                          offset=offset,
-                                                          order_by=order_by,
-                                                          conditions=conditions,
-                                                          ))
+        entries_select = entries_select.where(or_(*conditions))
+    if offset is not None:
+        entries_select = entries_select.offset(offset)
+    if limit is not None:
+        entries_select = entries_select.limit(limit)
 
-    elif search and search != "":
-        conditions = [
-          table.c.title.ilike(f"%{search}%"),
-          table.c.description.ilike(f"%{search}%"),
-          table.c.link.ilike(f"%{search}%"),
-          table.c.source_url.ilike(f"%{search}%"),
-        ]
-        entries = list(connection.entries_table.get_where(limit=limit,
-                                                          offset=offset,
-                                                          order_by=order_by,
-                                                          conditions=conditions,
-                                                          ))
-    else:
-        entries = list(connection.entries_table.get_where(limit=limit,
-                                                          offset=offset,
-                                                          order_by=order_by))
+    entries = connection.connection.execute(entries_select)
+
+    entries = list(entries)
+
     return entries
 
 
@@ -334,22 +329,46 @@ def entry_edit():
     return render_template_string(html_text, entry_id=entry_id)
 
 
+@app.route("/entry-vote", methods=["GET", "POST"])
+def entry_vote():
+    connection = DbConnection(table_name)
+
+    entry_id = request.args.get("id")
+    current_vote = 0
+    votes = EntryVotes(connection=connection)
+
+    if request.method == "POST":
+        entry_vote = request.form.get("entry-vote", "")
+
+        votes.set(entry_id=entry_id, vote=entry_vote)
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+    else:
+        current_vote = votes.get(entry_id=entry_id)
+
+    html_text = get_view(ENTRY_VOTE_TEMPLATE, title="Vote entry")
+    return render_template_string(html_text, entry_id=entry_id, current_vote=current_vote)
+
+
 @app.route("/entry-tag", methods=["GET", "POST"])
 def entry_tag():
     connection = DbConnection(table_name)
 
     entry_id = request.args.get("id")
-    current_tags = ""
+    tags = EntryTags(connection=connection)
 
     if request.method == "POST":
         entry_tags = request.form.get("entry-tag", "")
 
-        tags = EntryTags(connection=connection)
-        tags.set(entry_tags)
+        tags.set(entry_id=entry_id, tags=entry_tags)
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
         return render_template_string(html_text)
+    else:
+        current_tags = tags.get(entry_id=entry_id)
 
     html_text = get_view(ENTRY_TAG_TEMPLATE, title="Tag entry")
     return render_template_string(html_text, entry_id=entry_id, current_tags=current_tags)
@@ -617,19 +636,24 @@ def api_entries():
         socialdata = SocialData(connection=connection)
         social_data_object = socialdata.get(entry_id=entry.id)
 
+        tags = EntryTags(connection)
+        tags = tags.get_map(entry_id=entry.id)
+
         if entry.source_id:
             entry_source = connection.sources_table.get(id=entry.source_id)
 
             json_entry_data = entry_to_json(entry,
                                             with_id=True,
                                             source=entry_source,
-                                            social_data=social_data_object)
+                                            social_data=social_data_object,
+                                            tags=tags)
             json_entries.append(json_entry_data)
         else:
             json_entry_data = entry_to_json(entry,
                                             with_id=True,
                                             source=None,
-                                            social_data=social_data_object)
+                                            social_data=social_data_object,
+                                            tags=tags)
             json_entries.append(json_entry_data)
 
     json_data = {}
