@@ -49,9 +49,29 @@ class ProcessSourceJobHandler(GenericJobHandler):
         source_id = int(self.job.subject)
         sources = Sources(self.connection)
         source = sources.get(id=source_id)
-        if source is not None:
-            self.check_source(source)
-        # source might have been removed
+
+        if not source:
+            AppLogging(self.connection).debug(f"Source id: {source_id} Could not find source")
+            return False
+
+        if not source.enabled:
+            AppLogging(self.connection).debug(f"Source id: {source_id} Source is not enabled")
+            return False
+
+        rules = EntryRules(self.connection)
+        if rules.is_url_blocked(source.url):
+            AppLogging(self.connection).debug(f"Source id: {source_id} Source is blocked")
+            sources = Sources(connection=self.connection)
+            sources.delete(id=source.id)
+            return False
+
+        sources_data = SourceData(self.connection)
+        if not sources_data.is_update_needed(source):
+            now = datetime.now()
+            AppLogging(self.connection).debug(f"{source.url}: Update not needed @ {now}")
+            return False
+
+        self.check_source(source)
 
     def check_source(self, source):
         url = self.get_response_real(source)
