@@ -213,7 +213,7 @@ SOURCES_LIST_TEMPLATE = """
 
 <form method="GET">
   <label for="search">Search</label></br>
-  <input type="search" id="search" name="search" value="{{search_value}}"/>
+  <input type="search" id="search" name="search" value="{{search_value}}" autofocus/>
   <button type="submit">Search</button>
 </form>
 
@@ -281,9 +281,7 @@ ADD_LINKS_TEMPLATE = """
 
 <form method="POST">
     <p>One source URL per line:</p>
-    <textarea name="sources">
-{{raw_data}}
-    </textarea>
+    <textarea name="sources" autofocus>{{raw_data}}</textarea>
     <br>
     <button type="submit">Add</button>
 </form>
@@ -299,9 +297,7 @@ ADD_SOURCES_TEMPLATE = """
 
 <form method="POST">
     <p>One source URL per line:</p>
-    <textarea name="sources">
-{{raw_data}}
-    </textarea>
+    <textarea name="sources" autofocus>{{raw_data}}</textarea>
     <br>
     <button type="submit">Add</button>
 </form>
@@ -336,8 +332,10 @@ ENTRY_VOTE_TEMPLATE = """
 </div>
 
 <form method="POST">
-    <div><label for="entry-vote">Vote:</label></div>
-    <div><input type="search" id="entry-vote" name="entry-vote" value="{{current_vote}}"/></div>
+   <div><label for="entry-vote">Vote:</label></div>
+   <div>
+      <input type="search" id="entry-vote" name="entry-vote" value="{{current_vote}}" autofocus/>
+   </div>
    <button type="submit">Save</button>
 </form>
 """
@@ -351,7 +349,9 @@ ENTRY_TAG_TEMPLATE = """
 
 <form method="POST">
     <div><label for="entry-tag">Tag:</label></div>
-    <div><input type="search" id="entry-tag" name="entry-tag" value="{{current_tags}}"/></div>
+    <div>
+       <input type="search" id="entry-tag" name="entry-tag" value="{{current_tags}}" autofocus/>
+    </div>
    <button type="submit">Save</button>
 </form>
 """
@@ -368,9 +368,7 @@ Will block sources, and entries.
 
 <form method="POST">
     <p>The URLs/feeds below will be blocked. One source URL per line:</p>
-    <textarea name="sources">
-{{raw_data}}
-    </textarea>
+    <textarea name="sources" autofocus>{{raw_data}}</textarea>
     <br>
     <button type="submit">Save</button>
 </form>

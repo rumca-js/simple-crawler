@@ -564,6 +564,9 @@ function getEntryEditMenu(entry) {
     let entry_tag = getEntryTagAPI();
     let entry_vote = getEntryVoteAPI();
     let entry_remove = getEntryRemoveAPI();
+    let entry_update = getEntryUpdateAPI();
+    let entry_reset = getEntryResetAPI();
+
     let html = "";
 
     if (entry_edit)
@@ -589,6 +592,16 @@ function getEntryEditMenu(entry) {
         <li>
           <a href="${entry_tag}?id=${entry.id}" id="Tag" class="dropdown-item" title="Tag">
              Tag
+          </a>
+        </li>
+        <li>
+          <a href="${entry_update}?id=${entry.id}" id="Update" class="dropdown-item" title="Update">
+             Update
+          </a>
+        </li>
+        <li>
+          <a href="${entry_reset}?id=${entry.id}" id="Reset" class="dropdown-item" title="Reset">
+             Reset
           </a>
         </li>
         <li>

@@ -121,15 +121,59 @@ def parse_search(search, table, tags_table):
     ]
 
 
-def get_entries_for_request(connection, limit, offset, search=None):
+def get_entries_for_request(connection, order, limit, offset, search=None):
     table = connection.entries_table.get_table()
     tags_table = connection.entrycompactedtags.get_table()
+    social_table = connection.socialdata.get_table()
 
     conditions = parse_search(search, table, tags_table)
 
-    entries_select = (select(table, tags_table.c.tag)
+    order_bys = [table.c.page_rating_votes.desc()]
+    if order == "-view_count":
+        order_bys = [social_table.c.view_count.desc()]
+    elif order == "view_count":
+        order_bys = [social_table.c.view_count.asc()]
+    elif order == "-stars":
+        order_bys = [social_table.c.stars.desc()]
+    elif order == "stars":
+        order_bys = [social_table.c.stars.asc()]
+    elif order == "-followers_count":
+        order_bys = [social_table.c.followers_count.desc()]
+    elif order == "followers_count":
+        order_bys = [social_table.c.followers_count.asc()]
+    elif order == "-date_published":
+        order_bys = [table.c.date_published.desc()]
+    elif order == "date_published":
+        order_bys = [table.c.date_published.asc()]
+    elif order == "-date_created":
+        order_bys = [table.c.date_created.desc()]
+    elif order == "date_created":
+        order_bys = [table.c.date_created.asc()]
+    elif order == "-link":
+        order_bys = [table.c.link.desc()]
+    elif order == "link":
+        order_bys = [table.c.link.asc()]
+    elif order == "-page_rating_votes":
+        order_bys = [table.c.page_rating_votes.desc()]
+    elif order == "page_rating_votes":
+        order_bys = [table.c.page_rating_votes.asc()]
+    else:
+        order_bys = [table.c.page_rating_votes.desc()]
+
+    entries_select = (select(table,
+                             tags_table.c.tag,
+                             social_table.c.thumbs_up,
+                             social_table.c.thumbs_down,
+                             social_table.c.view_count,
+                             social_table.c.followers_count,
+                             social_table.c.stars,
+                             social_table.c.upvote_ratio,
+                             social_table.c.upvote_diff,
+                             social_table.c.upvote_view_ratio,
+                             )
                      .outerjoin(tags_table, table.c.id == tags_table.c.entry_id)
-                     .order_by(table.c.page_rating_votes.desc())
+                     .outerjoin(social_table, table.c.id == social_table.c.entry_id)
+                     .order_by(*order_bys)
                      )
 
     if conditions:
@@ -328,6 +372,44 @@ def entry_edit():
 
     html_text = get_view(ENTRY_EDIT_TEMPLATE, title="Edit entry")
     return render_template_string(html_text, entry_id=entry_id)
+
+
+@app.route("/entry-update", methods=["GET", "POST"])
+def entry_update():
+    connection = DbConnection(table_name)
+
+    entry_id = request.args.get("id")
+
+    if entry_id:
+        BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry_id))
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    else:
+        template_html = STR_TEMPLATE.replace("{template_string}", "NOK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+
+@app.route("/entry-reset", methods=["GET", "POST"])
+def entry_reset():
+    connection = DbConnection(table_name)
+
+    entry_id = request.args.get("id")
+
+    if entry_id:
+        BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_RESET_DATA, subject=str(entry_id))
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    else:
+        template_html = STR_TEMPLATE.replace("{template_string}", "NOK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
 
 
 @app.route("/entry-vote", methods=["GET", "POST"])
@@ -631,9 +713,10 @@ def api_entries():
     offset = pagination.get_offset()
 
     search = request.args.get("search")
+    order_by = request.args.get("order_by")
 
     json_entries = []
-    entries = get_entries_for_request(connection, limit, offset, search)
+    entries = get_entries_for_request(connection, order_by, limit, offset, search)
 
     for entry in entries:
         socialdata = SocialData(connection=connection)

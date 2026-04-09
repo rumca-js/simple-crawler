@@ -46,6 +46,16 @@ function getEntryVoteAPI() {
 }
 
 
+function getEntryUpdateAPI() {
+   return `/entry-update`;
+}
+
+
+function getEntryResetAPI() {
+   return `/entry-reset`;
+}
+
+
 function getEntryRemoveAPI() {
    return `/remove-entry`;
 }
