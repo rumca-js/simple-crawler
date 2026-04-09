@@ -24,10 +24,14 @@ class SourceData(object):
         new_data["import_seconds"] = 0
         new_data["number_of_entries"] = 0
 
-        if op_data:
-            self.connection.sourceoperationaleata.update_json_data(id=op_data.id, json_data=new_data)
-        else:
-            self.connection.sourceoperationaleata.insert_json_data(json_data=new_data)
+        try:
+            if op_data:
+                self.connection.sourceoperationaleata.update_json_data(id=op_data.id, json_data=new_data)
+            else:
+                self.connection.sourceoperationaleata.insert_json_data(json_data=new_data)
+        except Exception as E:
+            E_str = str(E)
+            print(f"Error for data {new_data} {E_str}")
 
     def is_update_needed(self, source):
         this_source_data = self.get_source_data(source)
