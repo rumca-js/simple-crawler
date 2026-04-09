@@ -32,6 +32,7 @@ from src.sources import Sources
 from src.applogging import AppLogging
 from src.entryvotes import EntryVotes
 from src.entrytags import EntryTags
+from linkarchivetools.utils.reflected import ReflectedTable
 
 
 __version__ = "0.0.0"
@@ -355,6 +356,8 @@ def entry_vote():
 @app.route("/entry-tag", methods=["GET", "POST"])
 def entry_tag():
     connection = DbConnection(table_name)
+    table = ReflectedTable(connection.engine, connection.connection)
+    table.vacuum()
 
     entry_id = request.args.get("id")
     tags = EntryTags(connection=connection)
