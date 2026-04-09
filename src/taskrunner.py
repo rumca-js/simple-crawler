@@ -8,17 +8,19 @@ from webtoolkit import (
    RemoteUrl,
    RemoteServer,
 )
+from linkarchivetools.model import (
+    DbConnection,
+    SourceData,
+    Sources,
+    Entries,
+    AppLogging,
+    BackgroundJob,
+    ConfigurationEntry,
+)
 
-from .dbconnection import DbConnection
 from .controller import Controller
 from .system import System
-from .sourcedata import SourceData
-from .sources import Sources
-from .entries import Entries
-from .applogging import AppLogging
 from .jobhandlers import *
-from .backgroundjobs import BackgroundJob
-from .configurationentry import ConfigurationEntry
 
 
 class TaskRunner(object):
