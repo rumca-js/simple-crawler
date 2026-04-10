@@ -42,16 +42,10 @@ class TaskRunner(object):
             self.connection = DbConnection(self.table_name)
             self.controller = Controller(connection=self.connection)
 
-            self.setup_start()
-
-            # TODO remove it
-            sources = Sources(self.connection)
-            sources_len = sources.count()
-            if init_sources or sources_len == 0:
+            config_entry = ConfigurationEntry(self.connection).get()
+            if not config_entry.initialized:
+                self.setup_start()
                 self.init_sources(init_sources)
-
-            config_entry = ConfigurationEntry(self.connection)
-            config_entry.reset()
 
             self.controller.close()
             self.connection.close()
@@ -59,6 +53,18 @@ class TaskRunner(object):
             self.process_jobs()
         except Exception as e:
             traceback.print_exc()
+
+    def reset_config(self):
+        config = ConfigurationEntry(self.connection)
+        config_entry = config.get()
+
+        json_data = {}
+        json_data["initialized"] = True
+        json_data["enable_social_data"] = False
+        json_data["new_entries_fetch_social_data"] = False
+        json_data["entry_update_fetches_social_data"] = False
+
+        config.get_table().update_json_data(id=config_entry.id, json_data=json_data)
 
     def init_sources(self, init_sources):
         # self.controller.add_sources()
@@ -68,13 +74,15 @@ class TaskRunner(object):
         pass
 
     def setup_start(self):
-        entries = Entries(self.connection)
-        entries_len = entries.count()
-        sources = Sources(self.connection)
-        sources_len = sources.count()
+        #entries = Entries(self.connection)
+        #entries_len = entries.count()
+        #sources = Sources(self.connection)
+        #sources_len = sources.count()
 
-        AppLogging(self.connection).info(f"Entries: {entries_len}")
-        AppLogging(self.connection).info(f"Sources: {sources_len}")
+        #AppLogging(self.connection).info(f"Entries: {entries_len}")
+        #AppLogging(self.connection).info(f"Sources: {sources_len}")
+
+        self.reset_config()
 
     def process_jobs(self):
         print("Starting reading")
@@ -111,6 +119,9 @@ class TaskRunner(object):
             return job
 
     def check_sources(self):
+        """
+        TODO - order by update time required
+        """
         sourcedata = SourceData(self.connection)
 
         source_ids = []
@@ -154,7 +165,11 @@ class TaskRunner(object):
             return AddLinkJobHandler(connection = self.connection, job=job, table_name = self.table_name)
 
     def add_update_jobs(self):
-        desired_len = 5
+        config_entry = ConfigurationEntry(self.connection).get()
+        number_of_update_entries = config_entry.number_of_update_entries
+
+        if not number_of_update_entries:
+            return
 
         days_to_update = 5
 
@@ -166,7 +181,7 @@ class TaskRunner(object):
                           .where(or_(table.c.date_update_last.is_(None),
                                  table.c.date_update_last < date_cutoff)
                           )
-                          .limit(desired_len)
+                          .limit(number_of_update_entries)
                          )
 
         entries = self.connection.connection.execute(entries_select)
