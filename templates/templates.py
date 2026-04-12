@@ -36,6 +36,7 @@ INDEX_TEMPLATE = """
 <h1>{{title}} v{{version}}</h1>
 <ul>
   <li><a href="/search">Search</a>
+  <li><a href="/check-later-list">Check later</a>
   <li><a href="/sources">Sources</a>
   <li><a href="/status">Status</a>
   <li><a href="/admin">Admin</a>
