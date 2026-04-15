@@ -111,26 +111,19 @@ class ProcessSourceJobHandler(GenericJobHandler):
 
             return url
 
-    def handle_valid_response(self, source, url, response):
-        source_properties = url.get_properties()
+    def is_entry_to_be_removed(self, entry):
+        if entry.bookmarked:
+            return False
 
-        sources = Sources(self.connection)
-        sources.set(source.url, source_properties)
-        #sources.delete_entries(source)
+        check_later = CheckLater(self.connection)
+        if check_later.get(entry_id = entry.id):
+            return False
 
-        links = self.get_links(url)
-        entries = Entries(self.connection)
+        return True
 
-        for link in links:
-            exists = self.connection.entries_table.exists(link=link)
-            if not exists and UrlLocation(link).is_webpage_link():
-                self.process_link(link, source)
-
-    def on_added_entry(self, entry):
-        rules = EntryRules(self.connection).get_rules_for(entry=entry)
-        for rule in rules:
-            if not rule.enabled:
-                continue
+    def on_added_entry(self, entry_json):
+        if EntryRules(self.connection).is_url_blocked(url=entry_json["link"]):
+            return
 
             """
             if rule.script:
@@ -166,6 +159,20 @@ class ProcessSourceJobHandler(GenericJobHandler):
             sources = Sources(self.connection)
             sources.delete(id=source.id)
         return url
+
+    def handle_valid_response(self, source, url, response):
+        source_properties = url.get_properties()
+
+        sources = Sources(self.connection)
+        sources.set(source.url, source_properties)
+
+        links = self.get_links(url)
+        entries = Entries(self.connection)
+
+        for link in links:
+            exists = self.connection.entries_table.exists(link=link)
+            if not exists and UrlLocation(link).is_webpage_link():
+                self.process_link(link, source)
 
     def process_link(self, link, source):
         entry_json = self.link_to_entry(link, source)

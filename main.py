@@ -223,6 +223,11 @@ def get_sources_for_request(connection, limit, offset, search=None):
 
 
 @app.route("/")
+def main_index():
+    return redirect(url_for("search"))
+
+
+@app.route("/index")
 def index():
     connection = DbConnection(table_name)
     config = connection.configurationentry.get_first()
@@ -248,7 +253,7 @@ def search():
     default_values = {}
     default_values["view_display_type"] = config.display_type
 
-    return render_template_string(PROJECT_TEMPLATE, title="Yafr search", default_values=default_values)
+    return render_template_string(PROJECT_TEMPLATE, title=config.instance_title, default_values=default_values)
 
 
 @app.route("/sources")
@@ -293,6 +298,22 @@ def sources():
     html_text = get_view(template_text, title="Sources")
 
     return render_template_string(html_text, sources=sources, sources_length=sources_len)
+
+
+@app.route("/sources-fetch-period", methods=["GET", "POST"])
+def sources_fetch_period():
+    connection = DbConnection(table_name)
+
+    if request.method == "POST":
+        fetch_period = request.form.get("fetch-period", 0)
+        sourcedatas = connection.sourceoperationaldata.get_where()
+        for source_data in sourcedatas:
+            json_data = {}
+            json_data["fetch_period"] = fetch_period
+            connection.sources_table.update_json_data(id=source_data.id, json_data=json_data)
+
+    html_text = get_view(SOURCES_FETCH_TIME, title="Set sources fetch period")
+    return render_template_string(html_text)
 
 
 @app.route("/source/<int:source_id>", methods=["GET", "POST"])
@@ -378,6 +399,18 @@ def check_later_list():
 
     html_text = get_view(CHECK_LATER_LIST_TEMPLATE, title="Check later list")
     return render_template_string(html_text, entries=entries)
+
+
+@app.route("/check-later-clear", methods=["GET"])
+def check_later_clear():
+    connection = DbConnection(table_name)
+
+    check_controller = CheckLater(connection=connection)
+    check_controller.truncate()
+
+    template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+    html_text = get_view(template_html, title="OK")
+    return render_template_string(html_text)
 
 
 @app.route("/entry-check-later", methods=["GET"])

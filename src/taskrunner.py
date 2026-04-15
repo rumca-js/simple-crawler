@@ -67,11 +67,9 @@ class TaskRunner(object):
         config.get_table().update_json_data(id=config_entry.id, json_data=json_data)
 
     def init_sources(self, init_sources):
-        # self.controller.add_sources()
-        #for source_url in init_sources:
-        #    sources = Sources(self.connection)
-        #    sources.set(source_url)
-        pass
+        for source_url in init_sources:
+            sources = Sources(self.connection)
+            sources.set(source_url)
 
     def setup_start(self):
         self.reset_config()
@@ -126,16 +124,24 @@ class TaskRunner(object):
 
     def check_sources(self):
         """
-        TODO - order by update time required
+        First read unread sources.
+        The add jobs in order of reading need.
         """
-        sourcedata = SourceData(self.connection)
+        sd_controller = SourceData(self.connection)
+        sources = Sources(self.connection)
 
-        source_ids = []
-        for source in self.connection.sources_table.get_sources():
-            this_source_data = sourcedata.get_source_data(source)
-
-            if sourcedata.is_update_needed(source):
+        for source in sources.get_table().get_where():
+            source_data = sd_controller.get_source_data(source)
+            if not source_data:
                 job = BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_PROCESS_SOURCE, subject=str(source.id))
+
+        table = sd_controller.get_table().get_table()
+        order_by = [table.c.date_fetched.asc()]
+        for sd in sd_controller.get_table().get_where(order_by=order_by):
+            source = sources.get_table().get(id=sd.source_obj_id)
+            if source:
+                if sd_controller.is_update_needed(source):
+                    job = BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_PROCESS_SOURCE, subject=str(source.id))
 
     def handle_one_job(self):
         job = self.get_job()
