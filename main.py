@@ -682,6 +682,16 @@ def remove_all_sources():
     return render_template_string(html_text)
 
 
+@app.route("/remove-all-social-data")
+def remove_all_social_data():
+    connection = DbConnection(table_name)
+
+    connection.socialdata.truncate()
+
+    html_text = get_view(OK_TEMPLATE, title="Remove social data OK")
+    return render_template_string(html_text)
+
+
 @app.route("/remove-source")
 def remove_source():
     connection = DbConnection(table_name)
