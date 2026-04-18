@@ -20,6 +20,7 @@ from flask import (
 )
 from linkarchivetools.model import (
    DbConnection,
+   BackgroundJob,
    Entries,
    CheckLater,
    EntryRules,
@@ -497,7 +498,7 @@ def entry_update():
     entry_id = request.args.get("id")
 
     if entry_id:
-        BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry_id))
+        BackgroundJob(connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry_id))
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")

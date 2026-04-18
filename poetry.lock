@@ -441,14 +441,14 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "linkarchivetools"
-version = "0.1.56"
+version = "0.1.59"
 description = "Link Archive Tools"
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "linkarchivetools-0.1.56-py3-none-any.whl", hash = "sha256:c2f25e249c84426e6b8296375877e077472753d87457f7b5e96df91470839c48"},
-    {file = "linkarchivetools-0.1.56.tar.gz", hash = "sha256:b47c39c425e773116fcafa28dea1e67de1cc4b7bf11152764b140ce64a670446"},
+    {file = "linkarchivetools-0.1.59-py3-none-any.whl", hash = "sha256:e4924447f5a15c7556758cfb30cb67047b1df9af0de296e62e32a0d542a06215"},
+    {file = "linkarchivetools-0.1.59.tar.gz", hash = "sha256:e8375ddf9cd05a9efe445e52418b8402c441c16fbb4118426875bb8a7f4b151a"},
 ]
 
 [package.dependencies]
@@ -1319,4 +1319,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "db3dd9c28fe42fdb9b5e563b4be4c2fe765c3a57950a63c40f99d10e6933562c"
+content-hash = "8f74840cb04d4631ec513334ea36cbcc3070f1cdd200c2d7a6048de10e3a1811"
