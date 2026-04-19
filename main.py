@@ -27,6 +27,7 @@ from linkarchivetools.model import (
    SocialData,
    Sources,
    AppLogging,
+   SearchView,
    EntryVotes,
    EntryTags,
    entry_to_json,
@@ -136,6 +137,9 @@ def get_entries_for_request(connection, order, limit, offset, search=None):
     social_table = connection.socialdata.get_table()
 
     conditions = parse_search(search, table, tags_table)
+
+    #view_controller = SearchView(connection=connection)
+    #view = view_controller.get()
 
     order_bys = [table.c.page_rating_votes.desc()]
     if order == "-view_count":
