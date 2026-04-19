@@ -255,6 +255,7 @@ SOURCES_LIST_TEMPLATE = """
     <button class="btn btn-primary" onclick="history.back()">Go back</button>
     <a class="btn btn-primary" href="/">Home</a>
     <a class="btn btn-primary" href="/sources-fetch-period">Set Fetch Period</a>
+    <a class="btn btn-primary" href="/add-sources">Add sources</a>
 </div>
 
 <h1>Sources {{sources_length}}</h1>
