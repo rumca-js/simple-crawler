@@ -162,6 +162,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
         return url
 
     def handle_valid_response(self, source, url, response):
+        return self.handle_valid_response__links(source, url, response):
+
+    def handle_valid_response__links(self, source, url, response):
         source_properties = url.get_properties()
 
         sources = Sources(self.connection)
@@ -205,6 +208,27 @@ class ProcessSourceJobHandler(GenericJobHandler):
         entry = entry_interface.get_entry_json()
 
         return entry
+
+    def handle_valid_response__rss(self, source, url, response):
+        source_properties = url.get_properties()
+
+        sources = Sources(self.connection)
+        sources.set(source.url, source_properties)
+
+        entries = Entries(self.connection)
+
+        entries_where = entries.get_table().get_where({"source_id" : source.id})
+        for entry in entries_where:
+            if self.is_entry_to_be_removed(entry):
+                entries.delete(id=entry.id)
+            else:
+                continue
+
+        entry_jsons = url.get_entries()
+        for entry_json in entry_jsons:
+            if self.is_entry_ok(entry_json, source):
+                entries.add(entry_json, source)
+                self.on_added_entry(entry_json)
 
 
 class UpdateLinkJobHandler(GenericJobHandler):
