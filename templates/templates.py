@@ -280,10 +280,15 @@ SOURCES_LIST_TEMPLATE = """
 
             <a href="/source/{{ source.id }}">
               <div class="source-title">
-                 {{ source.url }}
+                 {{ source.title or "Untitled source" }}
               </div>
             </a>
-
+            <div class="source-title">
+               {{ source.url }}
+            </div>
+            <div class="source-title">
+               <a href="/rss/{{source.id}}">RSS</a>
+            </div>
         </div>
     {% endfor %}
 </div>
@@ -437,6 +442,8 @@ ENTRY_TAG_TEMPLATE = """
     <button class="btn btn-primary" onclick="history.back()">Go back</button>
     <a class="btn btn-primary" href="/">Home</a>
 </div>
+
+<h1>{{entry.title}}</h1>
 
 <form method="POST">
     <div><label for="entry-tag">Tag:</label></div>
