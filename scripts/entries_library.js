@@ -545,13 +545,22 @@ function getViewMenu(entry) {
         <ul class="dropdown-menu">`;
 
     links.forEach(function(item) {
-       html += ` <li>
+       html += `
+        <li>
           <a href="${item.link}" id="Edit" class="dropdown-item" title="${item.name}">
              ${item.name}
           </a>
         </li>
 	    `;
     });
+
+    html += `
+        <li>
+          <a href="/entry-dynamic-data?id=${entry.id}" id="dynamic" class="dropdown-item" title="Dynamic Data">
+           Dynamic data
+          </a>
+        </li>
+    `;
 
     html += `</ul></div>`;
 
