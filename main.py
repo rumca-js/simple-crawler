@@ -120,6 +120,7 @@ def parse_search(search, table, tags_table):
         "link": table.c.link,
         "source_url": table.c.source_url,
         "source_id": table.c.source_id,
+        "tag": tags_table.c.tag,
     }
 
     if "==" in search:
@@ -1016,6 +1017,25 @@ def api_entry():
                                             tags=tags)
 
         return jsonify(json_entry_data)
+
+
+@app.route("/api/entry-visit")
+def api_entry_visit():
+    connection = DbConnection(table_name)
+
+    entry_id = request.args.get("id")
+    entries = Entries(connection)
+    entry = entries.get(id=entry_id)
+
+    json_data = {}
+    json_data["page_rating_visits"] = entry.page_rating_visits + 1
+
+    connection = DbConnection(table_name)
+    connection.entries_table.update_json_data(entry.id, json_data)
+
+    props = {}
+    props["status"] = True
+    return jsonify(props)
 
 
 @app.route("/api/dynamic")

@@ -680,6 +680,7 @@ PROJECT_TEMPLATE_MAIN = """
         <script src="scripts/project.js?i=86"></script>
         <script src="scripts/search.js?i=86"></script>
         <script>
+           click_behavior_modal_window = false;
            {{script}}
         </script>
     </head>

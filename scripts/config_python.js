@@ -56,6 +56,11 @@ function getEntryResetAPI() {
 }
 
 
+function getEntryVisitAPI() {
+   return `/api/entry-visit`;
+}
+
+
 function getEntryCheckLaterAPI() {
    return `/entry-check-later`;
 }
@@ -129,7 +134,7 @@ function getInitialSearchSuggestsions() {
         "tag=wtf",
         "tag=funny",
         "language=pl",
-        "link=youtube.com/channel",
+        "link=youtube.com/feeds",
         "link=github.com/",
         "link=reddit.com/",
         "link=x.com/",

@@ -798,6 +798,10 @@ function getEntryOpParameters(entry) {
        text += `<div>Source url: ${entry.source_url}</div>`;
     }
 
+    if (entry.page_rating_visits != null) {
+       text += `<div>Visits: ${entry.page_rating_visits}</div>`;
+    }
+
     return text;
 }
 
@@ -1743,7 +1747,7 @@ function getEntryModalView(entry, show_icons = true, small_icons = false) {
     let detail_text = getEntryBodyText(entry);
 
     return `
-    <div class="modal fade" id="modal-${entry.id}" tabindex="-1"
+    <div class="modal fade" id="modal-${entry.id}" tabindex="-1" data-entry-id="${entry.id}"
          aria-labelledby="modalLabel-${entry.id}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
