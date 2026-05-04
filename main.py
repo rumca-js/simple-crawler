@@ -774,6 +774,13 @@ def remove_all_entries():
     connection.entries_table.truncate()
     connection.socialdata.truncate()
 
+    connection.usertags.truncate()
+    connection.compactedtags.truncate()
+    connection.usercompactedtags.truncate()
+    connection.entrycompactedtags.truncate()
+
+    connection.uservotes.truncate()
+
     html_text = get_view(OK_TEMPLATE, title="Remove all entries")
     return render_template_string(html_text)
 
