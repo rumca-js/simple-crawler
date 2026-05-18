@@ -323,6 +323,10 @@ class UpdateLinkJobHandler(GenericJobHandler):
             json_data["author"] = url.get_author()
         if url.get_album():
             json_data["album"] = url.get_album()
+        if not entry.date_created:
+            json_data["date_created"] = datetime.now()
+        if not entry.date_published and url.get_date_published():
+            json_data["date_published"] = url.get_date_published()
 
         json_data["status_code"] = url.get_status_code()
         json_data["contents_hash"] = url.get_hash()
@@ -379,6 +383,10 @@ class ResetLinkJobHandler(GenericJobHandler):
             json_data["author"] = url.get_author()
         if url.get_album():
             json_data["album"] = url.get_album()
+        if not entry.date_created:
+            json_data["date_created"] = datetime.now()
+        if not entry.date_published and url.get_date_published():
+            json_data["date_published"] = url.get_date_published()
 
         json_data["status_code"] = url.get_status_code()
         json_data["contents_hash"] = url.get_hash()
