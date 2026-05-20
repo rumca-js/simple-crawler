@@ -23,6 +23,7 @@ from .system import System
 from .jobhandlers import *
 
 
+# TODO remove that
 CONFIGURATION_NEWS = "News"
 CONFIGURATION_GALLERY = "Gallery"
 CONFIGURATION_SEARCH_ENGINE = "Search Engine"
@@ -210,7 +211,7 @@ class TaskRunner(object):
                     self.add_update_jobs()
                     BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_CLEANUP)
 
-                    AppLogging(self.connection).debug("Sleeping")
+                    AppLogging(self.connection).debug("Sleeping 10 sec")
                     self.connection.close()
                     system.set_thread_ok()
                     time.sleep(10)
@@ -218,7 +219,7 @@ class TaskRunner(object):
 
 
                 if self.connection.backgroundjob.count() == 0:
-                    AppLogging(self.connection).debug("Sleeping")
+                    AppLogging(self.connection).debug("Sleeping 60 sec")
                     self.connection.close()
                     system.set_thread_ok()
                     time.sleep(60)
@@ -244,6 +245,15 @@ class TaskRunner(object):
 
         if not job_history.date_created:
             return True
+
+        """
+        TODO
+        if BackgroundJob(self.connection).is_job(job_name = BackgroundJob.JOB_CLEANUP):
+            return False
+        """
+        jobs = self.connection.backgroundjob.get_where({"job" : BackgroundJob.JOB_CLEANUP})
+        for job in jobs:
+            return False
 
         return datetime.now() - job_history.date_created > timedelta(days=1)
 

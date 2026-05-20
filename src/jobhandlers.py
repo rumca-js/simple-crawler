@@ -12,7 +12,6 @@ from webtoolkit import (
    HTTP_STATUS_TOO_MANY_REQUESTS,
 )
 
-from .controller import Controller
 from linkarchivetools.model import (
    Sources,
    Entries,
@@ -24,8 +23,11 @@ from linkarchivetools.model import (
    ConfigurationEntry,
    CheckLater,
    BackgroundJob,
+   BlockEntry,
+   ReflectedTable,
 )
 
+from .controller import Controller
 from .entryurlinterface import EntryUrlInterface
 from .controller import Controller
 from .urlhandler import UrlHandler
@@ -75,9 +77,16 @@ class ProcessSourceJobHandler(GenericJobHandler):
             AppLogging(self.connection).debug(f"Source id: {source_id} Source is not enabled")
             return False
 
+        blocks = BlockEntry(self.connection)
+        if blocks.is_blocked(source.url):
+            AppLogging(self.connection).debug(f"Source id: {source_id} Source is blocked by block rules")
+            sources = Sources(connection=self.connection)
+            sources.delete(id=source.id)
+            return False
+
         rules = EntryRules(self.connection)
         if rules.is_url_blocked(source.url):
-            AppLogging(self.connection).debug(f"Source id: {source_id} Source is blocked")
+            AppLogging(self.connection).debug(f"Source id: {source_id} Source is blocked by entry rules")
             sources = Sources(connection=self.connection)
             sources.delete(id=source.id)
             return False
@@ -98,10 +107,10 @@ class ProcessSourceJobHandler(GenericJobHandler):
             # TODO use types from linkarchivedata
             if config_entry.initialization_type == "Search Engine":
                 sources = Sources(connection=self.connection)
-                sources.update_json_data(source.id, json_data={"source_type":"Parse"})
+                sources.get_table().update_json_data(source.id, json_data={"source_type":"Parse"})
             else:
                 sources = Sources(connection=self.connection)
-                sources.update_json_data(source.id, json_data={"source_type":"RSS"})
+                sources.get_table().update_json_data(source.id, json_data={"source_type":"RSS"})
 
     def check_source(self, source):
         url = self.get_response_real(source)
@@ -276,6 +285,7 @@ class ProcessSourceJobHandler(GenericJobHandler):
         entries = Entries(self.connection)
 
         entries_where = entries.get_table().get_where({"source_id" : source.id})
+        entry_ids = []
         for entry in entries_where:
             is_entry_in_source_now = False
             for json_entry in source_entries_json:
@@ -285,7 +295,11 @@ class ProcessSourceJobHandler(GenericJobHandler):
                     break
 
             if not is_entry_in_source_now and self.is_entry_to_be_removed(entry):
-                entries.delete(id=entry.id)
+                entry_ids.append(entry.id)
+
+        for entry_id in entry_ids:
+            print("Removing ID:{}".format(entry_id))
+            entries.delete(id=entry_id)
 
         for source_entry_json in source_entries_json:
             entry_json_link = source_entry_json.get("link")
