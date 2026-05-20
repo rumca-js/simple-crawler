@@ -336,6 +336,7 @@ def sources_fetch_period():
             json_data["fetch_period"] = fetch_period
             connection.sources_table.update_json_data(id=source_data.id, json_data=json_data)
 
+    connection.close()
     html_text = get_view(SOURCES_FETCH_TIME, title="Set sources fetch period")
     return render_template_string(html_text)
 
@@ -355,6 +356,7 @@ def source(source_id):
         data["xpath"] = request.form.get("xpath", "")
         connection.sources_table.update_json_data(id=source_op.id, json_data=data)
         html_text = get_view(OK_TEMPLATE, title="Updated")
+        connection.close()
         return render_template_string(html_text)
 
     if source_item:
@@ -388,6 +390,7 @@ def source_edit():
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
+        connection.close()
         return render_template_string(html_text)
 
     html_text = get_view(SOURCE_EDIT_TEMPLATE, title="Edit source")
@@ -403,6 +406,7 @@ def add_sources():
 
         controller = Controller(connection)
         controller.add_sources_text(raw_text)
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "Wait until sources are added")
         html_text = get_view(template_html, title="OK")
@@ -421,6 +425,7 @@ def add_links():
 
         controller = Controller(connection)
         controller.add_links_text(raw_text)
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "Wait until links are added")
         html_text = get_view(template_html, title="OK")
@@ -598,6 +603,7 @@ def entry_edit():
         json["age"] = age_int
 
         entries.get_table().update_json_data(id=entry_id, json_data=json)
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
@@ -607,7 +613,7 @@ def entry_edit():
     return render_template_string(html_text, entry=entry)
 
 
-@app.route("/entry-update", methods=["GET", "POST"])
+@app.route("/entry-update")
 def entry_update():
     connection = DbConnection(table_name)
 
@@ -622,6 +628,7 @@ def entry_update():
             return render_template_string(html_text)
 
         BackgroundJob(connection).create_single_job(job_name=BackgroundJob.JOB_LINK_UPDATE_DATA, subject=str(entry_id))
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
@@ -633,7 +640,7 @@ def entry_update():
         return render_template_string(html_text)
 
 
-@app.route("/entry-reset", methods=["GET", "POST"])
+@app.route("/entry-reset")
 def entry_reset():
     connection = DbConnection(table_name)
 
@@ -641,6 +648,7 @@ def entry_reset():
 
     if entry_id:
         BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_RESET_DATA, subject=str(entry_id))
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
@@ -664,6 +672,7 @@ def entry_vote():
         entry_vote = request.form.get("entry-vote", "")
 
         votes.set(entry_id=entry_id, vote=entry_vote)
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
@@ -691,6 +700,7 @@ def entry_tag():
         entry_tags = request.form.get("entry-tag", "")
 
         tags.set(entry_id=entry_id, tags=entry_tags)
+        connection.close()
 
         template_html = STR_TEMPLATE.replace("{template_string}", "OK")
         html_text = get_view(template_html, title="OK")
@@ -702,7 +712,7 @@ def entry_tag():
     return render_template_string(html_text, entry_id=entry_id, current_tags=current_tags, entry=entry)
 
 
-@app.route("/rss/<int:source_id>", methods=["GET", "POST"])
+@app.route("/rss/<int:source_id>")
 def rss(source_id):
     connection = DbConnection(table_name)
 
@@ -720,7 +730,7 @@ def rss(source_id):
     return Response(rss_text, mimetype="application/rss+xml")
 
 
-@app.route("/block-rules", methods=["GET", "POST"])
+@app.route("/block-rules")
 def block_rules():
     html_text = get_view(BLOCK_RULES_TEMPLATE, title="Block rules")
     return render_template_string(html_text)
@@ -736,6 +746,7 @@ def block_url():
     if request.method == "POST":
         raw_text = request.form.get("sources", "")
         rules.add_entry_rules(raw_text)
+        connection.close()
         return redirect(url_for("index"))
 
     sources = []
@@ -756,6 +767,7 @@ def define_block_rules():
     if request.method == "POST":
         raw_text = request.form.get("sources", "")
         rules.set_entry_rules(raw_text)
+        connection.close()
         return redirect(url_for("index"))
 
     sources = []
@@ -781,7 +793,7 @@ def entry_rules():
     return render_template_string(html_text)
 
 
-@app.route("/entry-rule", methods=["GET", "POST"])
+@app.route("/entry-rule")
 def entry_rule():
     connection = DbConnection(table_name)
     controller = Controller(connection)
@@ -805,6 +817,7 @@ def entry_rule_add():
         rules = EntryRules(connection = connection)
 
         html_text = get_view(ENTRY_RULE_ADD_TEMPLATE, title="Entry rule")
+        connection.close()
         return render_template_string(html_text, rule=rule)
 
     html_text = get_view(ENTRY_RULE_ADD_TEMPLATE, title="Entry rule")
@@ -818,6 +831,7 @@ def entry_rule_edit():
 
     entry_rule_id = request.args.get("id")
     if request.method == "POST":
+        connection.close()
         html_text = get_view(ENTRY_RULE_EDIT_TEMPLATE, title="Entry rule")
         return render_template_string(html_text, rule=rule)
 
@@ -953,7 +967,7 @@ def remove_entry():
     return render_template_string(html_text)
 
 
-@app.route("/logs", methods=["GET", "POST"])
+@app.route("/logs")
 def logs():
     connection = DbConnection(table_name)
 
@@ -969,7 +983,7 @@ def logs():
     return render_template_string(html_text, logs=logs, len_logs=len_logs)
 
 
-@app.route("/jobs", methods=["GET", "POST"])
+@app.route("/jobs")
 def jobs():
     connection = DbConnection(table_name)
 
@@ -1055,7 +1069,6 @@ def configuration():
         enable_social_data = request.form.get("enable_social_data", "")
         new_entries_fetch_social_data = request.form.get("new_entries_fetch_social_data", "")
         entry_update_fetches_social_data = request.form.get("entry_update_fetches_social_data", "")
-        number_of_update_entries = request.form.get("number_of_update_entries", "")
 
         data = {}
         if title != "None":
@@ -1070,9 +1083,11 @@ def configuration():
         data["enable_social_data"] = to_bool(enable_social_data)
         data["new_entries_fetch_social_data"] = to_bool(new_entries_fetch_social_data)
         data["entry_update_fetches_social_data"] = to_bool(entry_update_fetches_social_data)
-        data["number_of_update_entries"] = number_of_update_entries
+        data["number_of_update_entries"] = request.form.get("number_of_update_entries", "")
+        data["initialization_type"] = request.form.get("initialization_type", "")
 
         connection.configurationentry.update_json_data(id=config.id, json_data=data)
+        connection.close()
 
         html_text = get_view(OK_TEMPLATE, title="Changes applied")
         return render_template_string(html_text)
@@ -1080,6 +1095,7 @@ def configuration():
     instance_fields = {}
     instance_fields["instance_title"] = config.instance_title
     instance_fields["instance_description"] = config.instance_description
+    instance_fields["initialization_type"] = config.initialization_type
     instance_fields["display_type"] = config.display_type
     instance_fields["remote_webtools_server_location"] = config.remote_webtools_server_location
     instance_fields["enable_social_data"] = config.enable_social_data

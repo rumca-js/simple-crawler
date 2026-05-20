@@ -65,6 +65,8 @@ class ProcessSourceJobHandler(GenericJobHandler):
         sources = Sources(self.connection)
         source = sources.get(id=source_id)
 
+        self.update_source_type(source)
+
         if not source:
             AppLogging(self.connection).debug(f"Source id: {source_id} Could not find source")
             return False
@@ -89,6 +91,17 @@ class ProcessSourceJobHandler(GenericJobHandler):
         self.check_source(source)
 
         return True
+
+    def update_source_type(self, source):
+        if not source.source_type:
+            config_entry = ConfigurationEntry(self.connection).get()
+            # TODO use types from linkarchivedata
+            if config_entry.initialization_type == "Search Engine":
+                sources = Sources(connection=self.connection)
+                sources.update_json_data(source.id, json_data={"source_type":"Parse"})
+            else:
+                sources = Sources(connection=self.connection)
+                sources.update_json_data(source.id, json_data={"source_type":"RSS"})
 
     def check_source(self, source):
         url = self.get_response_real(source)
@@ -178,7 +191,11 @@ class ProcessSourceJobHandler(GenericJobHandler):
         return url
 
     def handle_valid_response(self, source, url, response):
-        return self.handle_valid_response__links(source, url, response)
+        # TODO use linkarchivetypes
+        if source.source_type == "RSS":
+            return self.handle_valid_response__rss(source, url, response)
+        else:
+            return self.handle_valid_response__links(source, url, response)
 
     def handle_valid_response__links(self, source, url, response):
         source_properties = url.get_properties()
