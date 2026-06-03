@@ -3,6 +3,7 @@ let all_entries = null;
 let entries_length = 0;
 let search_suggestions = [];
 let original_title = "";
+let common_indicators = null;
 
 
 function getFileName() {
@@ -128,13 +129,14 @@ function performSearchAPI() {
     let page_num = getPageNumber();
     const userInput = $("#searchInput").val();
     let order_by = getQueryParam("order_by");
+    let view = getQueryParam("view");
 
     getEntriesJson(function(data) {
        object_list_data = data;
        fillListData();
        $('#pagination').html(getPaginationText());
        onSearchStop();
-    }, page=page_num, search=userInput, order_by=order_by);
+    }, page=page_num, search=userInput, order_by=order_by, view=view);
 }
 
 
@@ -260,11 +262,73 @@ async function initWorker() {
 }
 
 
+function SetFooterStatusLine() {
+   let error_line = "";
+
+   if (common_indicators.sources_error.status) {
+       error_line += add_text(error_line, "Sources");
+   }
+   if (common_indicators.threads_error.status) {
+       error_line += add_text(error_line, "Threads");
+   }
+   if (common_indicators.jobs_error.status) {
+       error_line += add_text(error_line, "Jobs");
+   }
+   if (common_indicators.configuration_error.status) {
+       error_line += add_text(error_line, "Configuration");
+   }
+   if (common_indicators.internet_error.status) {
+       error_line += add_text(error_line, "Internet");
+   }
+   if (common_indicators.crawling_server_error.status) {
+       error_line += add_text(error_line, "Crawling server");
+   }
+   if (common_indicators.is_reading.status) {
+       error_line += add_text(error_line, common_indicators.is_reading.message);
+   }
+
+   if (error_line == "") {
+       $("#footerLine").html("");
+       $("#footerLine").hide();
+   }
+   else {
+       $("#footerLine").html(error_line);
+       $("#footerLine").show();
+   }
+}
+
+
+function getIndicators(callback=null) {
+    let url_address = getStatusAPI();
+
+    getDynamicJson(url_address, function (data) { 
+       if (callback) {
+         callback(data);
+       }
+    });
+}
+
+function getSystemIndicators() {
+   getIndicators(function(data) {
+       common_indicators = data.indicators;
+
+       SetFooterStatusLine();
+   });
+}
+
+
+function getBasicPageElements() {
+    getSystemIndicators();
+}
+
+
 async function Initialize() {
     let file_name = getFileName();
     original_title = document.title;
 
     $('#searchInput').prop('disabled', true);
+
+    getBasicPageElements();
 
     if (getDefaultFileName()) {
       if (isWorkerNeeded(file_name)) {
@@ -302,9 +366,26 @@ function onSystemReady() {
 }
 
 
-function getEntriesJson(callback=null, page=1, search=null, order_by=null) {
+function getEntriesJson(callback=null, page=1, search=null, order_by=null, view=null) {
    let url_location = getEntryAPI();
-   let url_address = `${url_location}?p=${page}&search=${search}&order_by=${order_by}`;
+   // TODO most likely there is some fancy javascript to encode it
+   let params = new URLSearchParams({});
+
+   if (search != null) {
+       params.append("search", search);
+   }
+   if (order_by != null) {
+       params.append("order_by", order_by);
+   }
+   if (view != null) {
+       params.append("view", view);
+   }
+   if (page != null) {
+       params.append("p", page);
+   }
+
+   let url_address = `${url_location}?${params.toString()}`;
+
    getDynamicJson(url_address, function(data) {
        if (callback) {
           callback(data);
