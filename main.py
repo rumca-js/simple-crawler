@@ -34,6 +34,7 @@ from linkarchivetools.model import (
    SearchView,
    EntryVotes,
    EntryTags,
+   ConfigurationEntry,
    entry_to_json,
    source_to_json,
    source_and_entries_to_rss,
@@ -84,6 +85,21 @@ if not app.config["DB_FILE"].exists():
 
 
 runner = TaskRunner(app.config["DB_FILE"])
+
+
+@app.before_request
+def check_initialization():
+    if request.endpoint in ("initialization_wizard", "scripts", "styles", "static"):
+        return
+
+    connection = DbConnection(app.config["DB_FILE"])
+    Controller(connection).add_configuration()
+
+    config = connection.configurationentry.get_first()
+    connection.close()
+
+    if not config or not config.initialized:
+        return redirect(url_for("initialization_wizard"))
 
 
 class PagePagination:
@@ -976,13 +992,16 @@ def view_add():
 
     if request.method == "POST":
         views = SearchView(connection = connection)
+        view_id = views.add()
+        view = views.get(id=view_id)
 
         html_text = get_view(VIEW_ADD_TEMPLATE, title="View add")
         connection.close()
         return render_template_string(html_text, view=view)
 
     html_text = get_view(VIEW_ADD_TEMPLATE, title="View add")
-    return render_template_string(html_text, rule=rule)
+    connection.close()
+    return render_template_string(html_text)
 
 
 @app.route("/view-edit", methods=["GET", "POST"])
@@ -991,13 +1010,28 @@ def view_edit():
     controller = Controller(connection)
 
     view_id = request.args.get("id")
-    if request.method == "POST":
-        connection.close()
-        html_text = get_view(VIEW_EDIT_TEMPLATE, title="View edit")
-        return render_template_string(html_text, rule=rule)
+    views = SearchView(connection = connection)
+    view = views.get(id=view_id)
 
-    html_text = get_view(VIEW_EDIT_TEMPLATE, title="View edit")
-    return render_template_string(html_text, rule=rule)
+    if request.method == "POST":
+        json_data = {}
+        json_data["name"] = request.args.get("Name")
+        json_data["default"] = request.args.get("default")
+        json_data["priority"] = request.args.get("priority")
+        json_data["filter_statement"] = request.args.get("filter_statement")
+        json_data["order_by"] = request.args.get("order_by")
+
+        json_data["default"] = json_data["default"] == "True"
+
+        connection.searchview.update_json_data(id = view_id, json_data=json_data)
+
+        connection.close()
+        html_text = get_view(VIEW_ADD_TEMPLATE, title="View edit")
+        return render_template_string(html_text, view=view)
+
+    html_text = get_view(VIEW_ADD_TEMPLATE, title="View edit")
+    connection.close()
+    return render_template_string(html_text, view=view)
 
 
 @app.route("/view-remove")
@@ -1007,10 +1041,10 @@ def view_remove():
 
     view_id = request.args.get("id")
 
-    view = SearchViews(connection = connection)
-    view.delete(id=view_id)
+    connection.searchview.delete(id=view_id)
 
     html_text = get_view(OK_TEMPLATE, title="Remove view")
+    connection.close()
     return render_template_string(html_text)
 
 
@@ -1116,7 +1150,7 @@ def remove_all_entry_rules():
 @app.route("/remove-all-views")
 def remove_all_views():
     connection = DbConnection(app.config["DB_FILE"])
-    connection.searchviews.truncate()
+    connection.searchview.truncate()
     connection.close()
 
     html_text = get_view(OK_TEMPLATE, title="Remove Search views OK")
@@ -1292,6 +1326,33 @@ def to_bool(variable):
     if variable == "1":
         return True
     return False
+
+
+@app.route("/initialization-wizard", methods=["GET", "POST"])
+def initialization_wizard():
+    connection = DbConnection(app.config["DB_FILE"])
+    config = connection.configurationentry.get_first()
+
+    if request.method == "POST":
+        initialization_type = request.form.get("initialization_type", "")
+        display_type = request.form.get("display_type", "")
+
+        if not config:
+            Controller(connection).add_configuration()
+            config = connection.configurationentry.get_first()
+
+        data = {}
+        data["initialized"] = True
+        data["initialization_type"] = initialization_type
+        data["display_type"] = display_type
+
+        connection.configurationentry.update_json_data(id=config.id, json_data=data)
+        connection.close()
+
+        return redirect(url_for("search"))
+
+    html_text = get_view(INITIALIZATION_WIZARD_TEMPLATE, title="Initialization Wizard")
+    return render_template_string(html_text)
 
 
 @app.route("/configuration", methods=["GET", "POST"])

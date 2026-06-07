@@ -615,6 +615,7 @@ VIEW_TEMPLATE = """
 <div class="nav-buttons">
     <button class="btn btn-primary" onclick="history.back()">Go back</button>
     <a class="btn btn-primary" href="/">Home</a>
+    <a class="btn btn-primary" href="/view-edit?id={{view.id}}">Edit</a>
     <a class="btn btn-primary" href="/view-remove?id={{view.id}}">Remove</a>
 </div>
 
@@ -638,6 +639,14 @@ VIEW_ADD_TEMPLATE = """
 <form method="POST">
     <div><label for="name">Name</label></div>
     <div><input type="search" id="name" name="name" value="{{view.name}}"/></div>
+    <div><label for="name">Priority</label></div>
+    <div><input type="search" id="priority" name="priority" value="{{view.priority}}"/></div>
+    <div><label for="name">Default</label></div>
+    <div><input type="search" id="default" name="default" value="{{view.default}}"/></div>
+    <div><label for="name">Filter statement</label></div>
+    <div><input type="search" id="filter_statement" name="filter_statement" value="{{view.filter_statement}}"/></div>
+    <div><label for="name">Order by</label></div>
+    <div><input type="search" id="order_by" name="order_by" value="{{view.order_by}}"/></div>
    <button type="submit">Save</button>
 </form>
 """
@@ -745,6 +754,34 @@ CONFIGURATION_TEMPLATE = """
     <div><input type="search" id="{{config_setting}}" name="{{config_setting}}" value="{{config_value}}"/></div>
 {% endfor %}
    <button type="submit">Search</button>
+</form>
+"""
+
+INITIALIZATION_WIZARD_TEMPLATE = """
+<div class="nav-buttons">
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Initialization Wizard</h1>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="initialization_type" class="form-label">Initialization Type</label>
+        <select class="form-select" id="initialization_type" name="initialization_type">
+            <option value="search_engine">Search Engine</option>
+            <option value="rss_reader">RSS Reader</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="display_type" class="form-label">Display Type</label>
+        <select class="form-select" id="display_type" name="display_type">
+            <option value="gallery">Gallery</option>
+            <option value="accordion">Accordion</option>
+        </select>
+    </div>
+    
+    <button type="submit" class="btn btn-success">Initialize</button>
 </form>
 """
 
