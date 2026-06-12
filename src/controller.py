@@ -6,10 +6,10 @@ from linkarchivetools.model import (
    SocialData,
    Sources,
    SourceData,
-   SearchView,
    EntryRules,
    BackgroundJob,
    ConfigurationEntry,
+   SearchView,
 )
 from .urlhandler import UrlHandler
 
