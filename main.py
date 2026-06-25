@@ -137,6 +137,7 @@ def parse_search(search, table, tags_table):
         "link": table.c.link,
         "source_url": table.c.source_url,
         "source_id": table.c.source_id,
+        #"source_title": table.c.source_title,
         "tag": tags_table.c.tag,
     }
 
@@ -163,6 +164,7 @@ def parse_search(search, table, tags_table):
           table.c.description.ilike(f"%{search}%"),
           table.c.link.ilike(f"%{search}%"),
           table.c.source_url.ilike(f"%{search}%"),
+          #table.c.source_title.ilike(f"%{search}%"),
           tags_table.c.tag.ilike(f"%{search}%"),
     ]
 
@@ -414,9 +416,14 @@ def source(source_id):
         source_op = source_ops[0]
 
     if request.method == "POST":
+        data = {}
         data["fetch_period"] = request.form.get("fetch_period", 0)
+        data["language"] = request.form.get("language")
+        data["auto_tag"] = request.form.get("auto_tag")
         data["xpath"] = request.form.get("xpath", "")
+
         connection.sources_table.update_json_data(id=source_op.id, json_data=data)
+
         html_text = get_view(OK_TEMPLATE, title="Updated")
         connection.close()
         return render_template_string(html_text)
@@ -1375,6 +1382,9 @@ def configuration():
         enable_social_data = request.form.get("enable_social_data", "")
         new_entries_fetch_social_data = request.form.get("new_entries_fetch_social_data", "")
         entry_update_fetches_social_data = request.form.get("entry_update_fetches_social_data", "")
+        track_user_navigation = request.form.get("track_user_navigation", "")
+        track_user_actions = request.form.get("track_user_actions", "")
+        track_user_searches = request.form.get("track_user_searches", "")
 
         data = {}
         if title != "None":
@@ -1391,6 +1401,9 @@ def configuration():
         data["entry_update_fetches_social_data"] = to_bool(entry_update_fetches_social_data)
         data["number_of_update_entries"] = request.form.get("number_of_update_entries", "")
         data["initialization_type"] = request.form.get("initialization_type", "")
+        data["track_user_navigation"] = to_bool(track_user_navigation)
+        data["track_user_actions"] = to_bool(track_user_actions)
+        data["track_user_searches"] = to_bool(track_user_searches)
 
         connection.configurationentry.update_json_data(id=config.id, json_data=data)
         connection.close()
@@ -1408,6 +1421,9 @@ def configuration():
     instance_fields["new_entries_fetch_social_data"] = config.new_entries_fetch_social_data
     instance_fields["entry_update_fetches_social_data"] = config.entry_update_fetches_social_data
     instance_fields["number_of_update_entries"] = config.number_of_update_entries
+    instance_fields["track_user_navigation"] = config.track_user_navigation
+    instance_fields["track_user_actions"] = config.track_user_actions
+    instance_fields["track_user_searches"] = config.track_user_searches
 
     html_text = get_view(CONFIGURATION_TEMPLATE, title="Configuration")
     return render_template_string(html_text, configuration=instance_fields)
