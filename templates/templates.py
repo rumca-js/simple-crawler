@@ -62,7 +62,12 @@ ADMIN_TEMPLATE = """
 </ul>
 
 <ul>
+  <li><a href="/link-test">Test link</a>
+</ul>
+
+<ul>
   <li><a href="/remove-all-sources">Remove all sources</a>
+  <li><a href="/remove-entries-no-source">Remove entries without source</a>
   <li><a href="/remove-all-entries">Remove all entries</a>
   <li><a href="/remove-all-social-data">Remove all social data</a>
   <li><a href="/remove-all-tags">Remove all tags</a>
@@ -71,6 +76,22 @@ ADMIN_TEMPLATE = """
   <li><a href="/remove-all-block-entries">Remove all block entries</a>
   <li><a href="/remove-all-views">Remove all views</a>
 </ul>
+"""
+
+
+TEST_LINK_TEMPLATE = """
+<div class="nav-buttons">
+    <button class="btn btn-primary" onclick="history.back()">Go back</button>
+    <a class="btn btn-primary" href="/">Home</a>
+</div>
+
+<h1>Test link</h1>
+
+<form method="POST">
+  <label for="link">Link</label></br>
+  <input type="link" id="link" name="link" value="{{search_value}}" size="100" autofocus/>
+  <button type="submit">Search</button>
+</form>
 """
 
 
@@ -341,8 +362,8 @@ SOURCE_TEMPLATE = """
 
 <p>
 <div>Date fetched:{{source_op_data.date_fetched}}</div>
-<div>Page hash:{{source_op_data.page_hash}}</div>
-<div>Body hash:{{source_op_data.body_hash}}</div>
+<div>Page hash:{{page_hash}}</div>
+<div>Body hash:{{body_hash}}</div>
 <div>Consecutive errors:{{source_op_data.consecutive_errors}}</div>
 </p>
 
@@ -414,9 +435,11 @@ ENTRY_EDIT_TEMPLATE = """
     <div><label for="description">Description</label></div>
     <div><textarea type="search" id="description" name="description">{{entry.description}}</textarea></div>
     <div><label for="language">Language</label></div>
-    <div><input type="search" id="language" name="language" value="{{entry.language}}"/></div>
+    <div><input type="search" id="language" name="language" value="{{properties.language}}"/></div>
+    <div><label for="date_published">Date published</label></div>
+    <div><input type="search" id="date_published" name="date_published" value="{{entry.date_published}}"/></div>
     <div><label for="age">Age</label></div>
-    <div><input type="search" id="age" name="age" value="{{entry.age}}"/></div>
+    <div><input type="search" id="age" name="age" value="{{properties.age}}"/></div>
    <button type="submit">Save</button>
 </form>
 """
@@ -709,7 +732,7 @@ JOBS_TEMPLATE = """
     <button class="btn btn-primary" onclick="history.back()">Go back</button>
     <a class="btn btn-primary" href="/">Home</a>
     <a class="btn btn-primary" href="/add-job">Add job</a>
-    <a class="btn btn-primary" href="/remove-all-jobs">Clear</a>
+    <a class="btn btn-primary" href="/remove-all-jobs">Remove All</a>
 </div>
 
 <h1>Jobs {{len_jobs}}</h1>
@@ -717,9 +740,19 @@ JOBS_TEMPLATE = """
 <div>
     {% for job in jobs %}
         <div>
+             {% if not job.enabled %}
+                [DISABLED]
+             {% endif %}
              ID:{{job.id}}, 
              [{{job.date_created}}]
              {{job.job}}: {{job.subject}},
+             {% if not job.enabled %}
+             <a class="btn btn-secondary btn-sm mx-1" href="/enable-job?id={{job.id}}">&lt;</a>
+             {% endif %}
+             {% if job.enabled %}
+             <a class="btn btn-secondary btn-sm mx-1" href="/disable-job?id={{job.id}}">||</a>
+             {% endif %}
+             <a class="btn btn-secondary btn-sm mx-1" href="/remove-job?id={{job.id}}">X</a>
         </div>
     {% endfor %}
 </div>

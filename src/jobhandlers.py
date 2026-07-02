@@ -182,13 +182,14 @@ class ProcessSourceJobHandler(GenericJobHandler):
                         new_data["body_hash"] = None
                         new_data["date_fetched"] = None
                         sd_controller.get_table().update_json_data(id=op_data.id, json_data=new_data)
+                
+                # TODO
+                #source_data = sd_controller.get_source_data(source)
+                #if source_data and source_data.page_hash and url.get_hash() and source_data.page_hash == url.get_hash():
+                #    page_same = True
 
-                source_data = sd_controller.get_source_data(source)
-                if source_data and source_data.page_hash and url.get_hash() and source_data.page_hash == url.get_hash():
-                    page_same = True
-
-                if source_data and source_data.body_hash and url.get_body_hash() and source_data.body_hash == url.get_body_hash():
-                    page_same = True
+                #if source_data and source_data.body_hash and url.get_body_hash() and source_data.body_hash == url.get_body_hash():
+                #    page_same = True
 
                 if not page_same:
                     self.handle_valid_response(source, url, response)
@@ -221,9 +222,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
             if response:
                 if (response.get_status_code() == HTTP_STATUS_TOO_MANY_REQUESTS or
                     response.get_status_code() == HTTP_STATUS_CODE_SERVER_TOO_MANY_REQUESTS):
-                    AppLogging(self.connection).debug("Retry of request. Waiting")
-                    time.sleep(20)
-                    continue
+                    AppLogging(self.connection).warning("Retry of request")
+                    # for reddit this blocked other jobs - adding new links
+                    return
             if response is None:
                 AppLogging(self.connection).error(f"Source ID:{source.id} URL:{source.url} No response")
                 return
@@ -374,8 +375,9 @@ class ProcessSourceJobHandler(GenericJobHandler):
     def handle_valid_response__rss(self, source, url, response):
         source_entries_json = url.get_entries()
 
-        if not self.is_new_entry(source, source_entries_json):
-            return
+        # TODO - if job was created then it should be processed?
+        #if not self.is_new_entry(source, source_entries_json):
+        #    return
 
         self.delete_source_entries(source, source_entries_json)
         entries = Entries(self.connection)
@@ -540,7 +542,7 @@ class ResetLinkJobHandler(GenericJobHandler):
             return False
 
         json_data = {}
-        json_data["date_updated"] = datetime.now()
+        json_data["date_update_last"] = datetime.now()
 
         if url.get_title():
             json_data["title"] = url.get_title()
