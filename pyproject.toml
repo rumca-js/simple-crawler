@@ -14,6 +14,7 @@ python = "^3.10"
 python-dateutil = "^2.8.2"
 flask="*"
 linkarchivetools="^0.1.94"
+yt-dlp="*"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.9.0"
