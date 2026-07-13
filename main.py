@@ -339,6 +339,43 @@ def styles(filename):
     return send_from_directory("styles/", filename)
 
 
+@app.route('/download-list')
+def download_list():
+    text = ""
+    files = os.listdir("downloads")
+
+    for file in sorted(files):
+        text += f"""<div>
+        <a href="/downloads/{file}">{file}</a>
+        <a href="/download-remove/{file}">Remove</a>
+        </div>"""
+
+    template_html = STR_TEMPLATE.replace("{template_string}", text)
+    html_text = get_view(template_html, title="Downloaded items")
+    return render_template_string(html_text)
+
+
+@app.route('/download-remove/<path:file_name>')
+def download_remove(file_name):
+    text = ""
+
+    path = Path("downloads") / Path(file_name)
+    if path.exists:
+        path.unlink()
+        text = "OK"
+    else:
+        text = "Could not remove the file"
+
+    template_html = STR_TEMPLATE.replace("{template_string}", text)
+    html_text = get_view(template_html, title="Downloaded items")
+    return render_template_string(html_text)
+
+
+@app.route('/downloads/<path:filename>')
+def downloads(filename):
+    return send_from_directory("downloads/", filename)
+
+
 @app.route("/search")
 def search():
     connection = get_connection()
@@ -717,7 +754,8 @@ def entry_edit():
         json["description"] = description
         json["language"] = language
         json["age"] = age_int
-        json["date_published"] = DateUtils.parse_datetime(date_published)
+        if date_published and date_published != "None":
+            json["date_published"] = DateUtils.parse_datetime(date_published)
 
         entries.get_table().update_json_data(id=entry_id, json_data=json)
         connection.close()
@@ -776,6 +814,87 @@ def entry_reset():
 
     else:
         template_html = STR_TEMPLATE.replace("{template_string}", "NOK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+
+@app.route("/entry-download")
+def entry_download():
+    connection = get_connection()
+
+    entry_id = request.args.get("id")
+
+    if entry_id:
+        is_job = BackgroundJob(connection).is_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD, subject=str(entry_id))
+
+        if is_job:
+            template_html = STR_TEMPLATE.replace("{template_string}", "NOK - exists")
+            html_text = get_view(template_html, title="OK")
+            return render_template_string(html_text)
+
+        BackgroundJob(connection).create_single_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD, subject=str(entry_id))
+        connection.close()
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    else:
+        template_html = STR_TEMPLATE.replace("{template_string}", "NOK - cannot find entry")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+
+@app.route("/entry-download-audio")
+def entry_download_audio():
+    connection = get_connection()
+
+    entry_id = request.args.get("id")
+
+    if entry_id:
+        is_job = BackgroundJob(connection).is_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_MUSIC, subject=str(entry_id))
+
+        if is_job:
+            template_html = STR_TEMPLATE.replace("{template_string}", "NOK - exists")
+            html_text = get_view(template_html, title="OK")
+            return render_template_string(html_text)
+
+        BackgroundJob(connection).create_single_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_MUSIC, subject=str(entry_id))
+        connection.close()
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    else:
+        template_html = STR_TEMPLATE.replace("{template_string}", "NOK - cannot find entry")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+
+@app.route("/entry-download-video")
+def entry_download_video():
+    connection = get_connection()
+
+    entry_id = request.args.get("id")
+
+    if entry_id:
+        is_job = BackgroundJob(connection).is_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_VIDEO, subject=str(entry_id))
+
+        if is_job:
+            template_html = STR_TEMPLATE.replace("{template_string}", "NOK - exists")
+            html_text = get_view(template_html, title="OK")
+            return render_template_string(html_text)
+
+        BackgroundJob(connection).create_single_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_VIDEO, subject=str(entry_id))
+        connection.close()
+
+        template_html = STR_TEMPLATE.replace("{template_string}", "OK")
+        html_text = get_view(template_html, title="OK")
+        return render_template_string(html_text)
+
+    else:
+        template_html = STR_TEMPLATE.replace("{template_string}", "NOK - cannot find entry")
         html_text = get_view(template_html, title="OK")
         return render_template_string(html_text)
 
