@@ -40,6 +40,8 @@ from linkarchivetools.model import (
    source_and_entries_to_rss,
 )
 from linkarchivetools.utils.reflected import ReflectedTable
+from linkarchivetools.dbupdate import DbUpdate
+
 from webtoolkit import json_encode_field, DateUtils
 
 from src.urlhandler import UrlHandler
@@ -166,6 +168,7 @@ def parse_search(search, table, tags_table):
             return [column.ilike(f"%{value}%")]
 
     return [
+          table.c.id.ilike(f"%{search}%"),
           table.c.title.ilike(f"%{search}%"),
           table.c.description.ilike(f"%{search}%"),
           table.c.link.ilike(f"%{search}%"),
@@ -564,10 +567,17 @@ def add_links():
         raw_text = request.form.get("sources", "")
 
         controller = Controller(connection)
-        controller.add_links_text(raw_text)
+        link_ids = controller.add_links_text(raw_text)
         connection.close()
 
-        template_html = STR_TEMPLATE.replace("{template_string}", "Wait until links are added")
+        text = ""
+        if link_ids:
+            for link_id in link_ids:
+                text += f"""<div>Added <a href="/search?search=id%3D{link_id}">{link_id}</a></div>\n"""
+        else:
+            text = "Not added anything"
+
+        template_html = STR_TEMPLATE.replace("{template_string}", text)
         html_text = get_view(template_html, title="OK")
         return render_template_string(html_text)
 
@@ -1920,6 +1930,9 @@ if __name__ == "__main__":
     debug_mode = args.debug
 
     if (debug_mode and os.environ.get("WERKZEUG_RUN_MAIN") == "true") or not debug_mode:
+        db_update = DbUpdate(db=app.config["DB_FILE"])
+        db_update.create_tables()
+
         thread = threading.Thread(
             target=runner.start,
             args=(),

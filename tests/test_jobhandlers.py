@@ -340,7 +340,7 @@ class ProcessSourceJobHandlerTest(DbTestCase):
         self.assertEqual(controller.count(), 1)
 
         source = sources.get(source_id)
-        self.assertEqual(source.source_type, Sources.SOURCE_TYPE_PARSE)
+        self.assertEqual(source.source_type, Sources.SOURCE_TYPE_RSS)
 
     def test_run__rss__updates__source(self):
         connection = self.initialize_database()
