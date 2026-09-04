@@ -3,7 +3,7 @@
 
 [tool.poetry]
 name = "simple-crawler"
-version = "1.0.58"
+version = "1.0.59"
 description = "Internet list database"
 authors = ["Iwan Grozny <renegat@renegat0x0.ddns.net>"]
 license = "GPL3"
@@ -12,7 +12,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 flask="*"
-linkarchivetools="^0.1.119"
+linkarchivetools="^0.1.120"
 yt-dlp = {extras = ["default"], version = "^2026.8.19"}
 
 [tool.poetry.group.dev.dependencies]
