@@ -197,7 +197,6 @@ def get_entries_for_request(connection, order_by, limit, offset, search=None, vi
     social_table = connection.socialdata.get_table()
     views_table = connection.searchview
 
-    print(f"View : {view_id}")
     view = None
     if not view_id:
         # TODO linkarchive should contain default view obtainer
@@ -211,7 +210,6 @@ def get_entries_for_request(connection, order_by, limit, offset, search=None, vi
         for searched_view in searched_views:
             print("Using search view")
             view = searched_view
-    print(f"Found view {view}")
 
     conditions = parse_search(search, table, tags_table)
 
@@ -222,9 +220,14 @@ def get_entries_for_request(connection, order_by, limit, offset, search=None, vi
 
     if not order_by and view:
         order_by = view.order_by
-    print(f"Using order by {order_by}")
 
-    order_bys = [table.c.page_rating_votes.desc()]
+    config = connection.configurationentry.get_first()
+    if config.initialization_type == ConfigurationEntry.CONFIGURATION_NEWS:
+        order_bys = [table.c.date_published.desc()]
+    else:
+        order_bys = [table.c.page_rating_votes.desc()]
+
+    order_bys = [table.c.date_published.desc()]
     if order_by == "-view_count":
         order_bys = [social_table.c.view_count.desc()]
     elif order_by == "view_count":
@@ -254,7 +257,7 @@ def get_entries_for_request(connection, order_by, limit, offset, search=None, vi
     elif order_by == "page_rating_votes":
         order_bys = [table.c.page_rating_votes.asc()]
     else:
-        order_bys = [table.c.page_rating_votes.desc()]
+        order_bys = [table.c.date_published.desc()]
 
     entries_select = (select(table,
                              tags_table.c.tag,
@@ -280,8 +283,6 @@ def get_entries_for_request(connection, order_by, limit, offset, search=None, vi
         conditions = or_(*view_conditions)
 
     if conditions is not None:
-        print("Using search conditions")
-        print(conditions)
         entries_select = entries_select.where(conditions)
     if offset is not None:
         entries_select = entries_select.offset(offset)
@@ -315,7 +316,6 @@ def get_sources_for_request(connection, limit, offset, search=None):
         sources = list(connection.sources_table.get_where(limit=limit,
                                                           offset=offset,
                                                           order_by=order_by))
-    print(f"len {sources}")
     return sources
 
 
@@ -456,6 +456,10 @@ def source(source_id):
     connection = get_connection()
 
     source_item = connection.sources_table.get(id=source_id)
+    if not source_item:
+        html_text = get_view(NOK_TEMPLATE, title="Cannot find source")
+        return render_template_string(html_text)
+
     source_ops = list(connection.sourceoperationaldata.get_where({"source_obj_id" : source_id}))
     source_op = None
     if len(source_ops) > 0:
@@ -467,27 +471,25 @@ def source(source_id):
         data["language"] = request.form.get("language")
         data["auto_tag"] = request.form.get("auto_tag")
         data["xpath"] = request.form.get("xpath", "")
+        data["age"] = request.form.get("age", 0)
 
-        connection.sources_table.update_json_data(id=source_op.id, json_data=data)
+        connection.sources_table.update_json_data(id=source_item.id, json_data=data)
+        #connection.sourceoperationaldata.update_json_data(id=source_op.id, json_data=data)
 
         html_text = get_view(OK_TEMPLATE, title="Updated")
         connection.close()
         return render_template_string(html_text)
 
-    if source_item:
-        html_text = get_view(SOURCE_TEMPLATE, title=source_item.title)
+    html_text = get_view(SOURCE_TEMPLATE, title=source_item.title)
 
-        if source_op:
-            page_hash = json_encode_field(source_op.page_hash)
-            body_hash = json_encode_field(source_op.body_hash)
-        else:
-            page_hash = None
-            body_hash = None
-
-        return render_template_string(html_text, source_item=source_item, source_op_data = source_op,  page_hash = page_hash, body_hash = body_hash)
+    if source_op:
+        page_hash = json_encode_field(source_op.page_hash)
+        body_hash = json_encode_field(source_op.body_hash)
     else:
-        html_text = get_view(NOK_TEMPLATE, title="Cannot find source")
-        return render_template_string(html_text)
+        page_hash = None
+        body_hash = None
+
+    return render_template_string(html_text, source_item=source_item, source_op_data = source_op,  page_hash = page_hash, body_hash = body_hash)
 
 
 @app.route("/source-edit", methods=["GET", "POST"])

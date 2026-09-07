@@ -377,6 +377,8 @@ SOURCE_TEMPLATE = """
     <div><input type="search" id="language" name="language" value="{{source_item.language}}"/></div>
     <div><label for="auto_tag">Auto tag</label></div>
     <div><input type="search" id="auto_tag" name="auto_tag" value="{{source_item.auto_tag}}"/></div>
+    <div><label for="age">Age designation. Can be 0</label></div>
+    <div><input type="search" id="age" name="age" value="{{source_item.age}}"/></div>
     <button type="submit">Save</button>
 </form>
 """
