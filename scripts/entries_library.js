@@ -541,7 +541,6 @@ function getViewMenu(entry) {
 	       }
            }
         }
-
     }
 
     const service_links = GetAllServicableLinks(link);
