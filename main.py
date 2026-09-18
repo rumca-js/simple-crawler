@@ -252,6 +252,10 @@ def get_entries_for_request(connection, order_by, limit, offset, search=None, vi
         order_bys = [table.c.date_created.desc()]
     elif order_by == "date_created":
         order_bys = [table.c.date_created.asc()]
+    elif order_by == "-date_dead_since":
+        order_bys = [table.c.date_dead_since.desc()]
+    elif order_by == "date_dead_since":
+        order_bys = [table.c.date_dead_since.asc()]
     elif order_by == "-link":
         order_bys = [table.c.link.desc()]
     elif order_by == "link":
@@ -1171,15 +1175,15 @@ def view_add():
     if request.method == "POST":
         views = SearchView(connection = connection)
         view_id = views.add()
-        view = views.get(id=view_id)
+        my_view = views.get(id=view_id)
 
         html_text = get_view(VIEW_ADD_TEMPLATE, title="View add")
         connection.close()
-        return render_template_string(html_text, view=view)
+        return render_template_string(html_text, view_item=my_view)
 
     html_text = get_view(VIEW_ADD_TEMPLATE, title="View add")
     connection.close()
-    return render_template_string(html_text)
+    return render_template_string(html_text, view_item=None)
 
 
 @app.route("/view-edit", methods=["GET", "POST"])
@@ -1193,11 +1197,11 @@ def view_edit():
 
     if request.method == "POST":
         json_data = {}
-        json_data["name"] = request.form.get("name")
+        json_data["name"] = request.form.get("name", "")
         json_data["default"] = request.form.get("default")
-        json_data["priority"] = request.form.get("priority")
-        json_data["filter_statement"] = request.form.get("filter_statement")
-        json_data["order_by"] = request.form.get("order_by")
+        json_data["priority"] = request.form.get("priority", 0)
+        json_data["filter_statement"] = request.form.get("filter_statement", "")
+        json_data["order_by"] = request.form.get("order_by", "")
 
         json_data["default"] = json_data["default"] == "True"
 
@@ -1205,11 +1209,11 @@ def view_edit():
 
         connection.close()
         html_text = get_view(VIEW_ADD_TEMPLATE, title="View edit")
-        return render_template_string(html_text, view=view)
+        return render_template_string(html_text, view_item=view)
 
     html_text = get_view(VIEW_ADD_TEMPLATE, title="View edit")
     connection.close()
-    return render_template_string(html_text, view=view)
+    return render_template_string(html_text, view_item=view)
 
 
 @app.route("/view-remove")
