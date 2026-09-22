@@ -99,10 +99,12 @@ class ProcessSourceJobHandler(GenericJobHandler):
         if self.check_source_entry_conditions(sources, source):
             return True
 
-        if self.check_if_old_source_checked_once_a_day(sources, source):
-            return True
+        #if self.check_if_old_source_checked_once_a_day(sources, source):
+        #    return True
 
-        return self.check_source(source)
+        if not self.check_source(source):
+            sources = Sources(self.connection)
+            sources.error(source)
 
     def check_source_entry_conditions(self, sources, source):
         if not source:
@@ -127,11 +129,7 @@ class ProcessSourceJobHandler(GenericJobHandler):
             sources.delete(id=source.id)
             return True
 
-        sd_controller = SourceData(self.connection)
-        if not sd_controller.is_update_needed(source):
-            now = datetime.now()
-            AppLogging(self.connection).debug(f"{source.url}: Update not needed @ {now}")
-            return True
+        # do not check if source data accept it. If we have process job - process
 
         return False
 
@@ -156,8 +154,6 @@ class ProcessSourceJobHandler(GenericJobHandler):
         date_published = None
         return_entry = None
 
-        #order_by = entries.get_table().get_table().c.date_published.desc()
-        #entries_where = entries.get_table().get_where({"source_id" : source.id}, order_by=order_by)
         entries_where = entries.get_table().get_where({"source_id" : source.id})
         for entry in entries_where:
             if date_published is None:
@@ -219,6 +215,7 @@ class ProcessSourceJobHandler(GenericJobHandler):
                 sd_controller.mark_read(source, url)
             else:
                 AppLogging(self.connection).error(f"URL:{source.url} Response is invalid")
+                return False
         else:
             AppLogging(self.connection).error(f"Source ID:{source.id} URL:{source.url} No response")
             return False
@@ -311,10 +308,10 @@ class ProcessSourceJobHandler(GenericJobHandler):
         source_properties = url.get_properties()
         if "language" in source_properties:
             if source_properties["language"] is None:
-                source_properties["language"] = ""
+                del source_properties["language"]
         if "title" in source_properties:
             if source_properties["title"] is None:
-                source_properties["title"] = ""
+                del source_properties["title"]
 
         sources = Sources(self.connection)
         sources.set(source.url, source_properties, source_type=source.source_type)
@@ -433,6 +430,24 @@ class ProcessSourceJobHandler(GenericJobHandler):
                     self.on_added_entry(source_entry_json)
                 else:
                     AppLogging(self.connection).error("Could not add entry")
+
+        self.disable_if_unused_source(source)
+
+    def disable_if_unused_source(self, source):
+        config_entry = ConfigurationEntry(self.connection).get()
+        number_of_days = 0
+        try:
+            number_of_days = config_entry.days_inactivity_to_disable_source
+        except Exception as E:
+            number_of_days = 365
+
+        entry = self.get_newest_entry(source)
+        if entry and entry.date_published:
+            date_published = entry.date_published
+            diff = datetime.now() - date_published
+            if diff.days > number_of_days:
+                sources = Sources(self.connection)
+                sources.disable(source)
 
     def delete_source_entries(self, source, source_entries_json):
         entries = Entries(self.connection)
@@ -707,53 +722,8 @@ class UpdateLinkJobHandler(GenericJobHandler):
         return self.update_entry(entry)
 
     def update_entry(self, entry):
-        handler = UrlHandler(connection=self.connection, link=entry.link)
-        url = handler.get_link_url()
-        response = url.get_response()
-        if response is None:
-            AppLogging(self.connection).error(f"URL:{enry.link} Response is None")
-            return False
-
-        json_data = {}
-        json_data["date_update_last"] = datetime.now()
-
-        if not entry.title:
-            json_data["title"] = url.get_title()
-        if not entry.description:
-            json_data["description"] = url.get_description()
-        if url.get_thumbnail():
-            json_data["thumbnail"] = url.get_thumbnail()
-        if url.get_author():
-            json_data["author"] = url.get_author()
-        if url.get_album():
-            json_data["album"] = url.get_album()
-        if not entry.date_created:
-            json_data["date_created"] = datetime.now()
-        if not entry.date_published and url.get_date_published():
-            json_data["date_published"] = url.get_date_published()
-
-        json_data["status_code"] = url.get_status_code()
-        json_data["contents_hash"] = url.get_hash()
-        json_data["body_hash"] = url.get_body_hash()
-        json_data["meta_hash"] = url.get_meta_hash()
-
-        if response.is_invalid():
-            json_data["date_dead_since"] = datetime.now()
-        else:
-            json_data["date_dead_since"] = None
-
-        if entry.link.endswith("/"):
-            json_data["link"] = entry.link[:-1]
-
-        self.connection.entries_table.update_json_data(id=entry.id, json_data=json_data)
-
-        config_entry = ConfigurationEntry(self.connection).get()
-        if config_entry.enable_social_data and config_entry.entry_update_fetches_social_data:
-            BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_SOCIAL, subject=str(entry.id))
-
-        # TODO does not work
-        #if config_entry.entry_update_download_audio:
-        #    BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_SOCIAL, subject=str(entry.id))
+        updater = EntryUpdater(connection=self.connection, entry=entry)
+        updater.update_data()
 
         return True
 
@@ -771,50 +741,8 @@ class ResetLinkJobHandler(GenericJobHandler):
         return self.reset_entry(entry)
 
     def reset_entry(self, entry):
-        handler = UrlHandler(connection=self.connection, link=entry.link)
-        url = handler.get_link_url()
-        response = url.get_response()
-        if response is None:
-            AppLogging(self.connection).error("URL:{enry.link} Response is None")
-            return False
-
-        json_data = {}
-        json_data["date_update_last"] = datetime.now()
-
-        if url.get_title():
-            json_data["title"] = url.get_title()
-        if url.get_description():
-            json_data["description"] = url.get_description()
-        if url.get_thumbnail():
-            json_data["thumbnail"] = url.get_thumbnail()
-        if url.get_author():
-            json_data["author"] = url.get_author()
-        if url.get_album():
-            json_data["album"] = url.get_album()
-        if not entry.date_created:
-            json_data["date_created"] = datetime.now()
-        if not entry.date_published and url.get_date_published():
-            json_data["date_published"] = url.get_date_published()
-
-        json_data["status_code"] = url.get_status_code()
-        json_data["contents_hash"] = url.get_hash()
-        json_data["body_hash"] = url.get_body_hash()
-        json_data["meta_hash"] = url.get_meta_hash()
-
-        if response.is_invalid():
-            json_data["date_dead_since"] = datetime.now()
-        else:
-            json_data["date_dead_since"] = None
-
-        if entry.link.endswith("/"):
-            json_data["link"] = entry.link[:-1]
-
-        self.connection.entries_table.update_json_data(id=entry.id, json_data=json_data)
-
-        config_entry = ConfigurationEntry(self.connection).get()
-        if config_entry.enable_social_data and config_entry.entry_update_fetches_social_data:
-            BackgroundJob(self.connection).create_single_job(job_name=BackgroundJob.JOB_LINK_DOWNLOAD_SOCIAL, subject=str(entry.id))
-
+        updater = EntryUpdater(connection=self.connection, entry=entry)
+        updater.reset_data()
         return True
 
 
